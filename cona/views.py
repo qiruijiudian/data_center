@@ -41,11 +41,11 @@ class ConaView(APIView):
             if key == "geothermal_wells_provide_heat":
                 params = ["time_data", "high_temp_plate_exchange_heat_production", "water_heat_pump_heat_production",
                           "geothermal_wells_high_heat_provide", "geothermal_wells_low_heat_provide"]
-                df = pd.read_sql(get_common_sql(params, db, start, end), con=engine)
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
             elif key == "panel_data":
-                params, db = ["max_load", "min_load", "cost_saving"], "cona_hours_data"
-                df = pd.read_sql(get_common_sql(params, db, start, end), con=engine)
+                params, db = ["max_load", "min_load", "cost_saving"], "cona_days_data"
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 cost_saving_sum = df["cost_saving"].sum()
                 cs_sum = cost_saving_sum / 10000
                 if cs_sum >= 1:
@@ -70,26 +70,26 @@ class ConaView(APIView):
                 params = ["time_data", "water_supply_temperature", "temp"]
 
                 time_range = get_last_time_range(start, end)
-                df = pd.read_sql(get_common_sql(params, db, start, end), con=engine)
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
 
                 last_df = pd.read_sql(
-                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"]), con=engine
+                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"], time_index), con=engine
                 )
 
                 data.update(get_correspondence_with_temp_chart_response(df, last_df, time_range, "water_supply_temperature"))
             elif key == "com_cop":
-                df = pd.read_sql(get_common_sql(["time_data", "com_cop"], db, start, end), con=engine)
+                df = pd.read_sql(get_common_sql(["time_data", "com_cop"], db, start, end, time_index), con=engine)
                 df["Target Minimum"] = 6
                 df["Low Threshold"] = 4
                 data.update(get_common_response(df, time_index, by))
                 data["status"] = "数据异常" if ("" in df["com_cop"].values or None in df["com_cop"].values) else "正常"
             elif key == "cost_saving":
-                df = pd.read_sql(get_common_sql(["time_data", "cost_saving"], db, start, end), con=engine)
+                df = pd.read_sql(get_common_sql(["time_data", "cost_saving"], db, start, end, time_index), con=engine)
 
                 data.update(get_common_response(df, time_index, by))
             elif key == "types_cost_saving":
                 params = ["time_data", "high_temp_charge", "low_temp_charge"]
-                df = pd.read_sql(get_common_sql(params, db, start, end), con=engine)
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(gen_time_range(df, time_index))
                 data.update(
                     {
@@ -99,9 +99,71 @@ class ConaView(APIView):
                 )
             elif key == "water_supply_and_return_temp":
                 params = ["time_data", "water_supply_temperature", "return_water_temperature", "supply_return_water_temp_diff"]
-                df = pd.read_sql(get_common_sql(params, db, start, end), con=engine)
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
+            elif key == "heat_well_heating_with_temp":
+                params = ["time_data", "heat_well_heating", "temp"]
 
+                time_range = get_last_time_range(start, end)
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+
+                last_df = pd.read_sql(
+                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"], time_index), con=engine
+                )
+
+                data.update(get_correspondence_with_temp_chart_response(df, last_df, time_range, "heat_well_heating"))
+            elif key == "heat_pipe_network_heating_with_temp":
+                params = ["time_data", "heat_pipe_network_heating", "temp"]
+
+                time_range = get_last_time_range(start, end)
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+
+                last_df = pd.read_sql(
+                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"], time_index), con=engine
+                )
+
+                data.update(get_correspondence_with_temp_chart_response(df, last_df, time_range, "heat_pipe_network_heating"))
+            elif key == "water_heat_pump_heat_with_temp":
+                params = ["time_data", "water_heat_pump_heat_production", "temp"]
+
+                time_range = get_last_time_range(start, end)
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+
+                last_df = pd.read_sql(
+                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"], time_index), con=engine
+                )
+
+                data.update(get_correspondence_with_temp_chart_response(df, last_df, time_range, "water_heat_pump_heat_production"))
+            elif key == "high_temp_plate_exchange_heat_with_temp":
+                params = ["time_data", "high_temp_plate_exchange_heat_production", "temp"]
+
+                time_range = get_last_time_range(start, end)
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+
+                last_df = pd.read_sql(
+                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"], time_index), con=engine
+                )
+
+                data.update(get_correspondence_with_temp_chart_response(df, last_df, time_range, "high_temp_plate_exchange_heat_production"))
+            elif key == "load":
+                params = ["time_data", "min_load", "avg_load", "max_load"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "load_compare":
+                params = ["time_data", "min_load", "avg_load", "max_load"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(gen_time_range(df, time_index))
+                data.update(
+                    {
+                        "max_load": {"name": "最大负荷", "value": df["max_load"].max().round(2)},
+                        "avg_load": {"name": "平均负荷", "value": df["avg_load"].mean().round(2)},
+                        "min_load": {"name": "最小负荷", "value": df["min_load"].min().round(2)}
+                    }
+                )
+            elif key == "water_replenishment":
+                params = ["time_data", "water_replenishment", "water_replenishment_limit"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
 
         except Exception as e:
             print("异常", e)

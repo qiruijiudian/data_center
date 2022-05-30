@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/5/18 17:29
 # @Author  : MAYA
+from itertools import chain
+
 import requests
 import json
 import pandas as pd
@@ -78,19 +80,67 @@ block = "cona"
 # res = test_api(block, get_params_data(block, {"key": "types_cost_saving", "by": "d"}, True))
 
 # 7. 平均供回水温度与温差
-res = test_api(block, get_params_data(block, {"key": "water_supply_and_return_temp", "by": "d"}, True))
+# res = test_api(block, get_params_data(block, {"key": "water_supply_and_return_temp", "by": "d"}))
+
+# 8. 热力井供热与气温关系
+# res = test_api(block, get_params_data(block, {"key": "heat_well_heating_with_temp", "by": "d"}))
+
+# 9. 热力管网供热与气温关系
+# res = test_api(block, get_params_data(block, {"key": "heat_pipe_network_heating_with_temp", "by": "d"}))
+
+# 8. 水源热泵制热量与气温关系
+# res = test_api(block, get_params_data(block, {"key": "water_heat_pump_heat_with_temp", "by": "d"}))
+
+# 8. 高温板换制热量与气温关系
+# res = test_api(block, get_params_data(block, {"key": "high_temp_plate_exchange_heat_with_temp", "by": "d"}))
+
+# 9. 负荷
+# res = test_api(block, get_params_data(block, {"key": "load", "by": "d"}))
+
+# 10. 补水量
+# res = test_api(block, get_params_data(block, {"key": "water_replenishment", "by": "h"}))
+
+# ************************* ******************** 测试 /cona 接口 END **************************************************
+# **********************************************************************************************************************
+
+
+# *********************************************** 测试 /kamba 接口 START **************************************************
+block = "kamba"
+# 1. 面板数据
+# res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+
+# 2. 蓄热水池高低温热量
+# res = test_api(block, get_params_data(block, {"key": "heat_storage_tank_heating", "by": "d"}))
+
+# 3. 电锅炉可替换供热天数
+# res = test_api(block, get_params_data(block, {"key": "alternative_heating_days", "by": "d"}))
+
+# 4. 系统综合COP
+# res = test_api(block, get_params_data(block, {"key": "com_cop", "by": "h"}, True))
+
+# 3. 水源热泵COP
+# res = test_api(block, get_params_data(block, {"key": "wshp_cop", "by": "h"}, True))
+
+# 4. 水池温度热力图
+# res = test_api(block, get_params_data(block, {"key": "pool_temperature_heatmap", "by": "h"}))
+
+# 5. 太阳能集热量
+# res = test_api(block, get_params_data(block, {"key": "solar_aollector", "by": "h"}))
+
+# . 太阳能矩阵供回水温度
+# res = test_api(block, get_params_data(block, {"key": "solar_matrix_water_temperature", "by": "h"}))
+
+# . ，末端供水与气温关系
+# res = test_api(block, get_params_data(block, {"key": "end_water_supply_with_temp", "by": "d"}))
+
+# . ，末端回水与气温关系
+# res = test_api(block, get_params_data(block, {"key": "end_water_return_with_temp", "by": "d"}))
+
+# . ，末端工供回水温差与气温关系
+res = test_api(block, get_params_data(block, {"key": "end_water_diff_with_temp", "by": "d"}))
 
 
 
 
-
-# r = requests.post(
-#     "http://localhost:8000/cona/", data={
-#         "key": "geothermal_wells_provide_heat",
-#         "start": "2021-02-01 00:00:00",
-#         "end": "2021-02-07 23:59:59",
-#         "by": "h"
-#     }
-# )
 
 print(res)

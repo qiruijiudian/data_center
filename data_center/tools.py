@@ -18,7 +18,7 @@ def gen_time_range(df, time_index):
 
 def get_common_response(df, time_index, by, is_timing=True):
     res = {}
-    df = df.fillna("")
+    df = df.round(2).fillna("")
 
     res["start"] = df[time_index].iloc[0].strftime("%Y/%m/%d")
     res["end"] = df[time_index].iloc[-1].strftime("%Y/%m/%d")
@@ -34,9 +34,9 @@ def get_common_response(df, time_index, by, is_timing=True):
     return res
 
 
-def get_common_sql(params, db, start, end):
-    common_sql = "select {} from {} where time_data between '{}' and '{}'"
-    return common_sql.format(",".join(params), db, start, end)
+def get_common_sql(params, db, start, end, time_key):
+    common_sql = "select {} from {} where {} between '{}' and '{}'"
+    return common_sql.format(",".join(params), db, time_key, start, end)
 
 
 def get_correspondence_with_temp_chart_response(df, last_df, time_range, value_column, temp_column="temp"):
@@ -62,7 +62,7 @@ def gen_response(df, time_index, by):
     """
 
     res = {}
-    df = df.fillna("")
+    df = df.round(2).fillna("")
     for column in df.columns:
         if column == time_index:
             if by == "d":
@@ -73,9 +73,8 @@ def gen_response(df, time_index, by):
             res["start"] = df[column].iloc[0].strftime("%Y/%m/%d")
             res["end"] = df[column].iloc[-1].strftime("%Y/%m/%d")
         else:
-            res[column] = df[column].values.round(2)
+            res[column] = df[column].values
     return res
-
 
 
 def get_block_time_range(block):
@@ -92,8 +91,6 @@ def get_block_time_range(block):
         return None
 
     latest_time = res[0]
-    print("latest", latest_time)
-
     _day = datetime.now() - timedelta(2)
     if latest_time.date() < _day.date():
         _day = latest_time
@@ -109,13 +106,13 @@ def get_block_time_range(block):
 
 
 def get_last_time_range(start, end):
-    time_start, time_end = map(lambda x: datetime.strptime(x, "%Y/%m/%d %H:%M:%S"), [start, end])
+    time_start, time_end = map(lambda x: datetime.strptime(x, "%Y/%m/%d %H:%M:%S") if "/" in x else datetime.strptime(x, "%Y-%m-%d %H:%M:%S"), [start, end])
     last_end = time_start - timedelta(days=1)
     delta = time_end - time_start
-    if delta <= timedelta(days=7):
+    if delta < timedelta(days=8):
         hint = "上月"
         last_start = last_end - timedelta(days=30)
-    elif delta <= 30:
+    elif delta <= timedelta(days=30):
         hint = "上季度"
         last_start = last_end - timedelta(days=90)
     else:
