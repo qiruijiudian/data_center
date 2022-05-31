@@ -130,14 +130,38 @@ block = "kamba"
 # . 太阳能矩阵供回水温度
 # res = test_api(block, get_params_data(block, {"key": "solar_matrix_water_temperature", "by": "h"}))
 
-# . ，末端供水与气温关系
+# . 末端供水与气温关系
 # res = test_api(block, get_params_data(block, {"key": "end_water_supply_with_temp", "by": "d"}))
 
-# . ，末端回水与气温关系
+# . 末端回水与气温关系
 # res = test_api(block, get_params_data(block, {"key": "end_water_return_with_temp", "by": "d"}))
 
-# . ，末端工供回水温差与气温关系
-res = test_api(block, get_params_data(block, {"key": "end_water_diff_with_temp", "by": "d"}))
+# . 末端工供回水温差与气温关系
+# res = test_api(block, get_params_data(block, {"key": "end_water_diff_with_temp", "by": "d"}))
+
+# . 末端供回水温度对照分析
+res = test_api(block, get_params_data(block, {"key": "end_water_temperature_compare", "by": "d"}, True))
+
+# . 太阳能集热分析
+# res = test_api(block, get_params_data(block, {"key": "solar_collector_analysis", "by": "d"}))
+
+# . 供热分析
+# res = test_api(block, get_params_data(block, {"key": "heating_analysis", "by": "d"}))
+
+# . 供热量情况
+# res = test_api(block, get_params_data(block, {"key": "heat_production", "by": "d"}))
+
+
+# . 高温板换制热功率
+# res = test_api(block, get_params_data(block, {"key": "high_temperature_plate_exchange_heat_rate", "by": "h"}))
+
+
+# . 节省供暖费用
+# res = test_api(block, get_params_data(block, {"key": "cost_saving", "by": "d"}))
+
+
+# . 末端供回水温度
+# res = test_api(block, get_params_data(block, {"key": "end_water_temperature", "by": "d"}))
 
 
 

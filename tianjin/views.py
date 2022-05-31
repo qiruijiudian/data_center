@@ -10,7 +10,7 @@ from data_center.tools import gen_response, gen_time_range, get_common_response,
 import platform
 
 
-class KambaView(APIView):
+class TianjinView(APIView):
     def post(self, request):
         plate_form = platform.system()
         time_index = "time_data"
@@ -183,7 +183,7 @@ class KambaView(APIView):
             elif key == "end_water_temperature_compare":
                 params = ["time_data", "end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff", "temp"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                last_time = get_last_time_by_delta(start, "-", 1, "y")
+                last_time = get_last_time_by_delta(end, "-", 1, "y")
 
                 last_df = pd.read_sql(
                     get_common_sql(params, db, last_time["start"], last_time["end"], time_index), con=engine
@@ -198,15 +198,13 @@ class KambaView(APIView):
                 last_df_start, last_df_end = last_df.iloc[0]["time_data"], last_df.iloc[-1]["time_data"]
                 data["start"] = df_start.strftime("%Y/%m/%d")
                 data["end"] = df_end.strftime("%Y/%m/%d")
-                data["last_year_start"] = last_df_start.strftime("%Y/%m/%d")
-                data["last_year_end"] = last_df_end.strftime("%Y/%m/%d")
+                data["last_start"] = last_df_start.strftime("%Y/%m/%d")
+                data["last_end"] = last_df_end.strftime("%Y/%m/%d")
 
             elif key == "solar_collector_analysis":
-                if by == "h":
-                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
-                df = pd.read_sql(get_common_sql(["time_data", "heat_supply", "solar_collector", "heating_guarantee_rate"], db, start, end, time_index),
+                df = pd.read_sql(get_common_sql(["time_data", "heat_supply", "solar_collector", "rate"], db, start, end, time_index),
                                  con=engine)
-                df["heating_guarantee_rate"] = df["heating_guarantee_rate"] * 100
+                df["rate"] = df["rate"] * 100
 
                 data.update(get_common_response(df, time_index, by))
             elif key == "heating_analysis":
@@ -215,9 +213,9 @@ class KambaView(APIView):
                 data.update(get_common_response(df, time_index, by))
 
             elif key == "heat_production":
-                params = ["time_data", "heat_supply", "power_consume", "heat_supply_rate"]
+                params = ["time_data", "heat_supply", "power_consume", "heat_collection_efficiency"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                df["heat_supply_rate"] = df["heat_supply_rate"] * 100
+                df["heat_collection_efficiency"] = df["heat_collection_efficiency"] * 100
                 data.update(get_common_response(df, time_index, by))
             elif key == "high_temperature_plate_exchange_heat_rate":
                 if by == "d":
@@ -231,17 +229,6 @@ class KambaView(APIView):
                 data.update(get_common_response(df, time_index, by))
             elif key == "end_water_temperature":
                 params = ["time_data", "end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                data.update(get_common_response(df, time_index, by))
-            elif key == "heat_storage_tank_replenishment":
-                df = pd.read_sql(get_common_sql(["time_data", "heat_storage_tank_replenishment"], db, start, end, time_index), con=engine)
-                data.update(get_common_response(df, time_index, by))
-            elif key == "heat_replenishment":
-                params = ["time_data", "heat_water_replenishment", "heat_water_replenishment_limit"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                data.update(get_common_response(df, time_index, by))
-            elif key == "solar_side_replenishment":
-                params = ["time_data", "solar_side_replenishment", "solar_side_replenishment_limit"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
 

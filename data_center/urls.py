@@ -18,6 +18,7 @@ from django.urls import path
 from cona.views import ConaView
 from common.views import CommonView
 from kamba.views import KambaView
+from tianjin.views import TianjinView
 
 urlpatterns = [
     path('admin/', admin.site.urls),

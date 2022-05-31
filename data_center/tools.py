@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import pymysql
 import platform
 from data_center.settings import DATABASE
+import operator
 
 
 def gen_time_range(df, time_index):
@@ -125,3 +126,16 @@ def get_last_time_range(start, end):
         "last_start": last_start.strftime("%Y/%m/%d %H:%M:%S"),
         "last_end": last_end.strftime("%Y/%m/%d %H:%M:%S")
     }
+
+
+def get_last_time_by_delta(now, operate, delta, unit):
+    if "-" in now:
+        now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
+    else:
+        now = datetime.strptime(now, "%Y/%m/%d %H:%M:%S")
+    end = now - timedelta(days=1)
+    days = {"y": 365, "m": 30, "d": 1}[unit] * delta
+    start = {"+": operator.add, "-": operator.sub}[operate](end, timedelta(days=days))
+    return {"start": start.strftime("%Y/%m/%d") + " 00:00:00", "end": end.strftime("%Y/%m/%d") + " 23:59:59"}
+
+
