@@ -24,5 +24,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("cona/", ConaView.as_view()),
     path("kamba/", KambaView.as_view()),
+    path("tianjin/", TianjinView.as_view()),
     path("common/", CommonView.as_view()),
 ]

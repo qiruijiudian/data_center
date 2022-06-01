@@ -79,12 +79,15 @@ def gen_response(df, time_index, by):
 
 
 def get_block_time_range(block):
-    start_limit = {"cona": "2020/12/31 00:00:00", "kamba": "2020/08/17 00:00:00", "tianjin": ""}
+    start_limit = {"cona": "2020/12/31 00:00:00", "kamba": "2020/08/17 00:00:00", "tianjin": "2022/03/15 00:00:00"}
     db = DATABASE[platform.system()]
     res = None
     with pymysql.connect(host=db["host"], user=db["user"], password=db["password"], database=db["database"]) as conn:
         cur = conn.cursor()
-        cur.execute("select time_data from {}_hours_data order by time_data desc limit 1".format(block))
+        if block in ["cona", "kamba"]:
+            cur.execute("select time_data from {}_hours_data order by time_data desc limit 1".format(block))
+        else:
+            cur.execute("select time_data from tianjin_commons_data order by time_data desc limit 1".format(block))
         res = cur.fetchone()
         cur.close()
 

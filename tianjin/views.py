@@ -14,13 +14,13 @@ class TianjinView(APIView):
     def post(self, request):
         plate_form = platform.system()
         time_index = "time_data"
+        by = "h"
         data = {}
 
         # 获取参数
         key = request.data.get('key', None)
         start = request.data.get('start', None)
         end = request.data.get('end', None)
-        by = request.data.get('by', None)
 
         if not key:
             return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
@@ -28,7 +28,7 @@ class TianjinView(APIView):
         if not all([key, start, end]):
             return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
 
-        db = "kamba_hours_data" if by and by.strip() == "h" else "kamba_days_data"
+        db = "tianjin_commons_data"
 
         engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
                     DATABASE[plate_form]["user"],
@@ -38,199 +38,93 @@ class TianjinView(APIView):
                 )
         )
         try:
-            if key == "geothermal_wells_provide_heat":
-                params = ["time_data", "high_temp_plate_exchange_heat_production", "water_heat_pump_heat_production",
-                          "geothermal_wells_high_heat_provide", "geothermal_wells_low_heat_provide"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                data.update(get_common_response(df, time_index, by))
-            elif key == "panel_data":
-                params, db = ["max_load", "min_load", "cost_saving"], "kamba_days_data"
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                cost_saving_sum = df["cost_saving"].sum()
-                cs_sum = cost_saving_sum / 10000
-                if cs_sum >= 1:
-                    if cs_sum > 10:
-                        cost_saving_sum = "{} 万元".format(round(cs_sum))
-                    else:
-                        cost_saving_sum = "{} 万元".format(round(cs_sum, 1))
-                else:
-                    cost_saving_sum = "{} 元".format(round(cost_saving_sum, 2))
 
+            if key == "panel_data":
+                params = [
+                    "air_supply_pressure_201", "air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401",
+                    "air_supply_humidity_201", "air_supply_humidity_202", "air_supply_humidity_203", "air_supply_humidity_301", "air_supply_humidity_401",
+                    "air_supply_temperature_201", "air_supply_temperature_202", "air_supply_temperature_203", "air_supply_temperature_301", "air_supply_temperature_401"
+                ]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                df = df.round(2)
                 data.update(
                     {
-                        "max_load": "{} KW".format(df["max_load"].max().round(2)),
-                        "min_load": "{} KW".format(df["min_load"].min().round(2)),
-                        "cost_saving_total": cost_saving_sum
+                        "max_temperature": "{} ℃".format(df.loc[:, ["air_supply_temperature_201", "air_supply_temperature_202", "air_supply_temperature_203", "air_supply_temperature_301", "air_supply_temperature_401"]].max().values.max()),
+                        "max_humidity": "{} %".format(df.loc[:, ["air_supply_humidity_201", "air_supply_humidity_202", "air_supply_humidity_203", "air_supply_humidity_301", "air_supply_humidity_401"]].max().values.max()),
+                        "max_pressure": "{} Pa".format(df.loc[:, ["air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401"]].max().values.max())
                     }
                 )
 
-            elif key == "heat_storage_tank_heating":
-                params = ["time_data", "high_heat_of_storage", "low_heat_of_storage"]
+            elif key == "mau_fan_frequency":
+                params = ["time_data", "fan_frequency_201", "fan_frequency_202", "fan_frequency_203", "fan_frequency_301", "fan_frequency_401"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                for column in params[1:]:
+                    df[column] = df[column] * 100
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_water_valve_201":
+                params = ["time_data", "cold_water_valve_201", "hot_water_valve_201"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
-            elif key == "alternative_heating_days":
-                params = ["time_data", "high_heat_of_storage", "heat_supply_days"]
+            elif key == "mau_water_valve_202":
+                params = ["time_data", "cold_water_valve_202", "hot_water_valve_202"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
-            elif key == "com_cop":
-                df = pd.read_sql(get_common_sql(["time_data", "cop"], db, start, end, time_index), con=engine)
-                df["Target Minimum"] = 6
-                df["Low Threshold"] = 4
-                data.update(get_common_response(df, time_index, by))
-                data["status"] = "数据异常" if ("" in df["cop"].values or None in df["cop"].values) else "正常"
-            elif key == "wshp_cop":
-                df = pd.read_sql(get_common_sql(["time_data", "wshp_cop"], db, start, end, time_index), con=engine)
-                df["Target Minimum"] = 6
-                df["Low Threshold"] = 4
-                data.update(get_common_response(df, time_index, by))
-                data["status"] = "数据异常" if ("" in df["wshp_cop"].values or None in df["wshp_cop"].values) else "正常"
-            elif key == "pool_temperature_heatmap":
-                db = "kamba_hours_pool_data"
-                if not end:
-                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
-                day = end.split(" ")[0]
-                start = "{} 00:00:00".format(day)
-                data["date"] = day
-
-                params = ['Timestamp', 'Pit_LT01_0m00cm', 'Pit_LT02_0m20cm', 'Pit_LT03_0m40cm', 'Pit_LT04_0m60cm', 'Pit_LT05_0m80cm', 'Pit_LT06_1m00cm', 'Pit_LT07_1m20cm', 'Pit_LT08_1m40cm', 'Pit_LT09_1m60cm', 'Pit_LT10_1m80cm', 'Pit_LT11_2m00cm', 'Pit_LT12_2m20cm', 'Pit_LT13_2m40cm', 'Pit_LT14_2m60cm', 'Pit_LT15_2m80cm', 'Pit_LT16_3m00cm', 'Pit_MT01_3m20cm', 'Pit_MT02_3m40cm', 'Pit_MT03_3m60cm', 'Pit_MT04_3m80cm', 'Pit_MT05_4m00cm', 'Pit_MT06_4m20cm', 'Pit_MT07_4m40cm', 'Pit_MT08_4m60cm', 'Pit_MT09_4m80cm', 'Pit_MT10_5m00cm', 'Pit_MT11_5m20cm', 'Pit_MT12_5m40cm', 'Pit_HT01_5m73cm', 'Pit_HT02_6m06cm', 'Pit_HT03_6m39cm', 'Pit_HT04_6m72cm', 'Pit_HT05_7m05cm', 'Pit_HT06_7m38cm', 'Pit_HT07_7m71cm', 'Pit_HT08_8m04cm', 'Pit_HT09_8m37cm', 'Pit_HT10_8m70cm', 'Pit_HT11_9m03cm', 'Pit_HT12_9m36cm']
-                height = ['0', '0.2', '0.4', '0.6', '0.8', '1', '1.2', '1.4', '1.6', '1.8', '2', '2.2', '2.4',
-                          '2.6', '2.8', '3', '3.2', '3.4', '3.6', '3.8', '4', '4.2', '4.4', '4.6', '4.8', '5', '5.2',
-                          '5.4', '5.73', '6.06', '6.39', '6.72', '7.05', '7.38', '7.71', '8.04', '8.37', '8.7', '9.03',
-                          '9.36']
-
-                df = pd.read_sql(get_common_sql(params, db, start, end, "Timestamp"), con=engine)
-                df = df.round(2).fillna("")
-                res, max_num, min_num = [], -np.inf, np.inf
-                for column_index, column in enumerate(params[1:]):
-                    for index in df.index:
-                        hour = df.loc[index, "Timestamp"].hour
-                        value = df.loc[index, column]
-                        if 0 <= hour < 4:
-
-                            res.append(["0-4", height[column_index], value])
-                        elif 4 <= hour < 8:
-                            res.append(["4-8", height[column_index], value])
-                        elif 8 <= hour < 12:
-                            res.append(["8-12", height[column_index], value])
-                        elif 12 <= hour < 16:
-                            res.append(["12-16", height[column_index], value])
-                        elif 16 <= hour < 20:
-                            res.append(["16-20", height[column_index], value])
-                        elif 20 <= hour < 24:
-                            res.append(["20-24", height[column_index], value])
-
-                        if isinstance(value, float) and value > max_num:
-                            max_num = value
-                        if isinstance(value, float) and value < min_num:
-                            min_num = value
-                data["values"] = res
-                data["max"] = max_num
-                data["min"] = min_num
-                data["sizes"] = height
-                data["time"] = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"]
-
-            elif key == "solar_collector":
-                df = pd.read_sql(get_common_sql(["time_data", "solar_collector"], db, start, end, time_index), con=engine)
-
-                data.update(get_common_response(df, time_index, by))
-            elif key == "":
-                pass
-            elif key == "solar_matrix_water_temperature":
-                params = ["time_data", "solar_matrix_supply_water_temp", "solar_matrix_return_water_temp"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-
-                data.update(get_common_response(df, time_index, by))
-            elif key == "load":
-                params = ["time_data", "max_load", "min_load", "avg_load"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-
-                data.update(get_common_response(df, time_index, by))
-            elif key == "end_water_supply_with_temp":
-                params = ["time_data", "end_supply_water_temp", "temp"]
-
-                time_range = get_last_time_range(start, end)
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-
-                last_df = pd.read_sql(
-                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"], time_index), con=engine
-                )
-
-                data.update(get_correspondence_with_temp_chart_response(df, last_df, time_range, "end_supply_water_temp"))
-            elif key == "end_water_return_with_temp":
-                params = ["time_data", "end_return_water_temp", "temp"]
-
-                time_range = get_last_time_range(start, end)
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-
-                last_df = pd.read_sql(
-                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"], time_index), con=engine
-                )
-
-                data.update(
-                    get_correspondence_with_temp_chart_response(df, last_df, time_range, "end_return_water_temp"))
-            elif key == "end_water_diff_with_temp":
-                params = ["time_data", "end_return_water_temp_diff", "temp"]
-
-                time_range = get_last_time_range(start, end)
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-
-                last_df = pd.read_sql(
-                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"], time_index), con=engine
-                )
-
-                data.update(
-                    get_correspondence_with_temp_chart_response(df, last_df, time_range, "end_return_water_temp_diff"))
-            elif key == "end_water_temperature_compare":
-                params = ["time_data", "end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff", "temp"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                last_time = get_last_time_by_delta(end, "-", 1, "y")
-
-                last_df = pd.read_sql(
-                    get_common_sql(params, db, last_time["start"], last_time["end"], time_index), con=engine
-                )
-
-                df, last_df = df.round(2).fillna(""), last_df.round(2).fillna("")
-                temp, last_temp = df["temp"].values, last_df["temp"].values
-                for column in ["end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff"]:
-                    data[column] = list(zip(temp, df[column].values))
-                    data["last_" + column] = list(zip(last_temp, last_df[column].values))
-                df_start, df_end = df.iloc[0]["time_data"], df.iloc[-1]["time_data"]
-                last_df_start, last_df_end = last_df.iloc[0]["time_data"], last_df.iloc[-1]["time_data"]
-                data["start"] = df_start.strftime("%Y/%m/%d")
-                data["end"] = df_end.strftime("%Y/%m/%d")
-                data["last_start"] = last_df_start.strftime("%Y/%m/%d")
-                data["last_end"] = last_df_end.strftime("%Y/%m/%d")
-
-            elif key == "solar_collector_analysis":
-                df = pd.read_sql(get_common_sql(["time_data", "heat_supply", "solar_collector", "rate"], db, start, end, time_index),
-                                 con=engine)
-                df["rate"] = df["rate"] * 100
-
-                data.update(get_common_response(df, time_index, by))
-            elif key == "heating_analysis":
-                params = ["time_data", "high_temperature_plate_exchange_heat", "wshp_heat"]
+            elif key == "mau_water_valve_203":
+                params = ["time_data", "cold_water_valve_203", "hot_water_valve_203"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
+            elif key == "mau_water_valve_301":
+                params = ["time_data", "cold_water_valve_301", "hot_water_valve_301"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_water_valve_401":
+                params = ["time_data", "cold_water_valve_401", "hot_water_valve_401"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_air_supply_temp_and_humidity_201":
+                params = ["time_data", "air_supply_temperature_201", "air_supply_humidity_201"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_air_supply_temp_and_humidity_202":
+                params = ["time_data", "air_supply_temperature_202", "air_supply_humidity_202"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_air_supply_temp_and_humidity_203":
+                params = ["time_data", "air_supply_temperature_203", "air_supply_humidity_203"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_air_supply_temp_and_humidity_301":
+                params = ["time_data", "air_supply_temperature_301", "air_supply_humidity_301"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_air_supply_temp_and_humidity_401":
+                params = ["time_data", "air_supply_temperature_401", "air_supply_humidity_401"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_air_supply_pressure":
+                params = ["time_data", "air_supply_pressure_201", "air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "air_temperature_and_humidity":
+                sql = "select time, temp, humidity from tianjin where time between '{}' and '{}'"
 
-            elif key == "heat_production":
-                params = ["time_data", "heat_supply", "power_consume", "heat_collection_efficiency"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                df["heat_collection_efficiency"] = df["heat_collection_efficiency"] * 100
-                data.update(get_common_response(df, time_index, by))
-            elif key == "high_temperature_plate_exchange_heat_rate":
-                if by == "d":
-                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
-                params = ["time_data", "high_temperature_plate_exchange_heat_rate"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                data.update(get_common_response(df, time_index, by))
-            elif key == "cost_saving":
-                params = ["time_data", "cost_saving", "power_consumption"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                data.update(get_common_response(df, time_index, by))
-            elif key == "end_water_temperature":
-                params = ["time_data", "end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                data.update(get_common_response(df, time_index, by))
+                weather_engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
+                    DATABASE[plate_form]["user"],
+                    DATABASE[plate_form]["password"],
+                    DATABASE[plate_form]["host"],
+                    "weather"
+                ))
+                try:
+                    df = pd.read_sql(sql.format(start, end), con=weather_engine)
+                    df["temp"] = (df["temp"] - 32) / 1.8
+                    print(df)
+                    data.update(get_common_response(df, "time", by))
+                except Exception as e2:
+                    import traceback
+                    traceback.print_exc()
+                    weather_engine.dispose()
+                finally:
+                    weather_engine.dispose()
 
         except Exception as e:
             print("异常", e)

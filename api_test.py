@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 
 API_HOST = {"local": "http://localhost:8000", "cloud": "http://cdqrmi.com:8000"}
 
-API_TYPE = {"common": "/common/", "cona": "/cona/", "kamba": "/kamba/"}
+API_TYPE = {"common": "/common/", "cona": "/cona/", "kamba": "/kamba/", "tianjin": "/tianjin/"}
 
 
 def get_params_data(block, base_data, random_date=False):
@@ -127,44 +127,104 @@ block = "kamba"
 # 5. 太阳能集热量
 # res = test_api(block, get_params_data(block, {"key": "solar_aollector", "by": "h"}))
 
-# . 太阳能矩阵供回水温度
+# 6. 太阳能矩阵供回水温度
 # res = test_api(block, get_params_data(block, {"key": "solar_matrix_water_temperature", "by": "h"}))
 
-# . 末端供水与气温关系
+# 7. 蓄热水池补水量
+# res = test_api(block, get_params_data(block, {"key": "heat_storage_tank_replenishment", "by": "h"}))
+
+# 8. 供热端补水量
+# res = test_api(block, get_params_data(block, {"key": "heat_replenishment", "by": "h"}))
+
+# 9. 太阳能测补水量
+# res = test_api(block, get_params_data(block, {"key": "solar_side_replenishment", "by": "h"}))
+
+# 10. 负荷量
+# res = test_api(block, get_params_data(block, {"key": "load", "by": "d"}))
+
+# 11. 负荷量
+# res = test_api(block, get_params_data(block, {"key": "load", "by": "d"}))
+
+
+# 12. 末端供水与气温关系
 # res = test_api(block, get_params_data(block, {"key": "end_water_supply_with_temp", "by": "d"}))
 
-# . 末端回水与气温关系
+# 13. 末端回水与气温关系
 # res = test_api(block, get_params_data(block, {"key": "end_water_return_with_temp", "by": "d"}))
 
-# . 末端工供回水温差与气温关系
+# 14. 末端工供回水温差与气温关系
 # res = test_api(block, get_params_data(block, {"key": "end_water_diff_with_temp", "by": "d"}))
 
-# . 末端供回水温度对照分析
-res = test_api(block, get_params_data(block, {"key": "end_water_temperature_compare", "by": "d"}, True))
+# 15. 末端供回水温度对照分析
+# res = test_api(block, get_params_data(block, {"key": "end_water_temperature_compare", "by": "d"}, True))
 
-# . 太阳能集热分析
+# 16. 太阳能集热分析
 # res = test_api(block, get_params_data(block, {"key": "solar_collector_analysis", "by": "d"}))
 
-# . 供热分析
+# 17. 供热分析
 # res = test_api(block, get_params_data(block, {"key": "heating_analysis", "by": "d"}))
 
-# . 供热量情况
+# 18. 供热量情况
 # res = test_api(block, get_params_data(block, {"key": "heat_production", "by": "d"}))
 
-
-# . 高温板换制热功率
+# 19. 高温板换制热功率
 # res = test_api(block, get_params_data(block, {"key": "high_temperature_plate_exchange_heat_rate", "by": "h"}))
 
-
-# . 节省供暖费用
+# 20. 节省供暖费用
 # res = test_api(block, get_params_data(block, {"key": "cost_saving", "by": "d"}))
 
 
-# . 末端供回水温度
+# 21. 末端供回水温度
 # res = test_api(block, get_params_data(block, {"key": "end_water_temperature", "by": "d"}))
 
+# ************************* ******************** 测试 /kamba 接口 END **************************************************
+# **********************************************************************************************************************
 
 
+# *********************************************** 测试 /tianjin 接口 START ***********************************************
+block = "tianjin"
+# 1. 面板数据
+# res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+
+# 1. MAU风机频率
+res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
+
+# 2. MAU冷热水阀开度201
+# res = test_api(block, get_params_data(block, {"key": "mau_water_valve_201"}))
+
+# 3. MAU冷热水阀开度202
+# res = test_api(block, get_params_data(block, {"key": "mau_water_valve_202"}))
+
+# 4. MAU冷热水阀开度203
+# res = test_api(block, get_params_data(block, {"key": "mau_water_valve_203"}))
+
+# 5. MAU冷热水阀开度301
+# res = test_api(block, get_params_data(block, {"key": "mau_water_valve_301"}))
+
+# 6. MAU冷热水阀开度401
+# res = test_api(block, get_params_data(block, {"key": "mau_water_valve_401"}))
+
+# 7. MAU送风温度与湿度201
+# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_201"}))
+
+# 8. MAU冷热水阀开度202
+# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_203"}))
+
+# 9. MAU冷热水阀开度203
+# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_204"}))
+
+# 10. MAU冷热水阀开度301
+# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_301"}))
+
+# 11. MAU冷热水阀开度401
+# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_401"}))
+
+# 12. MAU送风压力
+# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_pressure"}))
+
+
+# 13. 室外空气温湿度
+res = test_api(block, get_params_data(block, {"key": "air_temperature_and_humidity"}))
 
 
 print(res)
