@@ -222,9 +222,8 @@ res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
 # 12. MAU送风压力
 # res = test_api(block, get_params_data(block, {"key": "mau_air_supply_pressure"}))
 
-
 # 13. 室外空气温湿度
-res = test_api(block, get_params_data(block, {"key": "air_temperature_and_humidity"}))
+# res = test_api(block, get_params_data(block, {"key": "air_temperature_and_humidity"}))
 
 
-print(res)
+# print(res)

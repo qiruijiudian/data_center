@@ -1,0 +1,8 @@
+title,x_name,y_name,y_unit,variables,line_types,interval,row_id
+补水量,日期,补水量,m?,蓄热水池补水量-供热端补水量-太阳能侧补水量,bar-line-line,h,1
+末端供回水温度与气温关系,气温,温度,℃,供水温度-回水温度-供回水温差,scatter-scatter-scatter,d,1
+供热分析,日期,热量,kWh,高温板换制热量-水源热泵制热量-太阳能集热量-供热量,bar-bar-line-line,d,2
+高温板换制热功率,日期,功率,kW,高温板换制热功率,line,h,3
+供热量情况,日期,热量,kWh,供热量-水源热泵耗电量,bar-line,d,3
+负荷与气温关系,气温,负荷,kWh,最小负荷-最大负荷-平均负荷,scatter-scatter-scatter,d,4
+负荷量情况,日期,负荷,kWh,最小负荷-最大负荷-平均负荷,bar-bar-line,d,4
