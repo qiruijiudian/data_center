@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/5/18 17:23
 # @Author  : MAYA
+import collections
+
+import pandas as pd
 from datetime import datetime, timedelta
 import pymysql
 import platform
@@ -142,3 +145,93 @@ def get_last_time_by_delta(now, operate, delta, unit):
     return {"start": start.strftime("%Y/%m/%d") + " 00:00:00", "end": end.strftime("%Y/%m/%d") + " 23:59:59"}
 
 
+def file_iterator(filename, chunk_size=512):
+    with open(filename, 'rb') as f:
+        while True:
+            c = f.read(chunk_size)
+            if c:
+                yield c
+            else:
+                break
+
+
+def get_custom_variables_mapping(block):
+
+    context = {
+        "cona": {'日期': {'h': 'time_data', 'd': 'time_data'}, '高温版换制热量': {'h': 'high_temp_plate_exchange_heat_production', 'd': 'high_temp_plate_exchange_heat_production'}, '水源热泵制热量': {'h': 'water_heat_pump_heat_production', 'd': 'water_heat_pump_heat_production'}, '地热井可提供高温热量': {'h': 'geothermal_wells_high_heat_provide', 'd': 'geothermal_wells_high_heat_provide'}, '地热井可提供低温热量': {'h': 'geothermal_wells_low_heat_provide', 'd': 'geothermal_wells_low_heat_provide'}, 'COP能效': {'h': 'com_cop', 'd': 'com_cop'}, '供暖费用': {'h': 'cost_saving', 'd': 'cost_saving'}, '高温供暖费用': {'h': 'high_temp_charge', 'd': 'high_temp_charge'}, '低温供暖费用': {'h': 'low_temp_charge', 'd': 'low_temp_charge'}, '热力井供热量': {'h': 'heat_well_heating', 'd': 'heat_well_heating'}, '热力管网供热量': {'h': 'heat_pipe_network_heating', 'd': 'heat_pipe_network_heating'}, '水源热泵供热量': {'h': 'water_heat_pump_heat_production', 'd': 'water_heat_pump_heat_production'}, '高温板换供热量': {'h': 'high_temp_plate_exchange_heat_production', 'd': 'high_temp_plate_exchange_heat_production'}, '最大负荷': {'h': 'max_load', 'd': 'max_load'}, '最小负荷': {'h': 'min_load', 'd': 'min_load'}, '平均负荷': {'h': 'avg_load', 'd': 'avg_load'}, '供水温度': {'h': 'water_supply_temperature', 'd': 'water_supply_temperature'}, '回水温度': {'h': 'return_water_temperature', 'd': 'return_water_temperature'}, '供回水温差': {'h': 'supply_return_water_temp_diff', 'd': 'supply_return_water_temp_diff'}, '补水量': {'h': 'water_replenishment', 'd': 'water_replenishment'}, '补水量限值': {'h': 'water_replenishment_limit', 'd': 'water_replenishment_limit'}, '2号机房综合COP': {'h': 'f2_cop', 'd': 'f2_cop'}, '3号机房综合COP': {'h': 'f3_cop', 'd': 'f3_cop'}, '4号机房综合COP': {'h': 'f4_cop', 'd': 'f4_cop'}, '5号机房综合COP': {'h': 'f5_cop', 'd': 'f5_cop'}, '2号机房水源热泵COP': {'h': 'f2_whp_cop', 'd': 'f2_whp_cop'}, '3号机房水源热泵COP': {'h': 'f3_whp_cop', 'd': 'f3_whp_cop'}, '4号机房水源热泵COP': {'h': 'f4_whp_cop', 'd': 'f4_whp_cop'}, '5号机房水源热泵COP': {'h': 'f5_whp_cop', 'd': 'f5_whp_cop'}, '2号机房支路1供水温度': {'h': 'f2_HHWLoop001_ST', 'd': 'f2_HHWLoop001_ST'}, '3号机房支路1供水温度': {'h': 'f3_HHWLoop001_ST', 'd': 'f3_HHWLoop001_ST'}, '3号机房支路2供水温度': {'h': 'f3_HHWLoop002_ST', 'd': 'f3_HHWLoop002_ST'}, '3号机房支路3供水温度': {'h': 'f3_HHWLoop003_ST', 'd': 'f3_HHWLoop003_ST'}, '4号机房支路1供水温度': {'h': 'f4_HHWLoop001_ST', 'd': 'f4_HHWLoop001_ST'}, '5号机房支路1供水温度': {'h': 'f5_HHWLoop001_ST', 'd': 'f5_HHWLoop001_ST'}, '平均气温': {'d': 'temp'}},
+        "kamba": {'日期': {'h': 'time_data', 'd': 'time_data'}, '蓄热水池低温热量': {'h': 'low_heat_of_storage', 'd': 'low_heat_of_storage'}, '蓄热水池高温热量': {'h': 'high_heat_of_storage', 'd': 'high_heat_of_storage'}, '电锅炉可替代供热天数': {'h': 'heat_supply_days', 'd': 'heat_supply_days'}, '水池平均温度': {'h': 'avg_pool_temperature', 'd': 'avg_pool_temperature'}, '系统综合COP': {'h': 'cop'}, '水源热泵COP': {'h': 'wshp_cop'}, '太阳能矩阵供水温度': {'h': 'solar_matrix_supply_water_temp', 'd': 'solar_matrix_supply_water_temp'}, '太阳能矩阵回水温度': {'h': 'solar_matrix_return_water_temp', 'd': 'solar_matrix_return_water_temp'}, '最大负荷': {'h': 'max_load', 'd': 'max_load'}, '最小负荷': {'h': 'min_load', 'd': 'min_load'}, '平均负荷': {'h': 'avg_load', 'd': 'avg_load'}, '末端供水温度': {'h': 'end_supply_water_temp', 'd': 'end_supply_water_temp'}, '末端回水温度': {'h': 'end_return_water_temp', 'd': 'end_return_water_temp'}, '末端供回水温差': {'h': 'end_return_water_temp_diff', 'd': 'end_return_water_temp_diff'}, '气温': {'h': 'temp', 'd': 'temp'}, '高温板换制热量': {'h': 'high_temperature_plate_exchange_heat', 'd': 'high_temperature_plate_exchange_heat'}, '水源热泵制热量': {'h': 'wshp_heat', 'd': 'wshp_heat'}, '高温板换制热功率': {'h': 'high_temperature_plate_exchange_heat_rate', 'd': 'high_temperature_plate_exchange_heat_rate'}, '太阳能集热量': {'h': 'solar_collector', 'd': 'solar_collector'}, '太阳能辐射量': {'h': 'solar_radiation', 'd': 'solar_radiation'}, '总太阳能辐射量': {'h': 'total_solar_radiation', 'd': 'total_solar_radiation'}, '逐日末端供热量': {'h': 'heat_supply', 'd': 'heat_supply'}, '流量': {'h': 'flow_rate', 'd': 'flow_rate'}, '集热系统供水温度': {'h': 'heat_collection_system_water_supply_temperature', 'd': 'heat_collection_system_water_supply_temperature'}, '集热系统回水温度': {'h': 'heat_collection_system_water_return_temperature', 'd': 'heat_collection_system_water_return_temperature'}, '供热率': {'h': 'heat_supply_rate', 'd': 'heat_supply_rate'}, '水源热泵耗电量': {'h': 'power_consume', 'd': 'power_consume'}, '节省电费': {'h': 'cost_saving', 'd': 'cost_saving'}, '耗电量': {'h': 'power_consumption', 'd': 'power_consumption'}, 'CO2减排耗电量': {'h': 'co2_power_consume', 'd': 'co2_power_consume'}, 'CO2减排量': {'h': 'co2_emission_reduction', 'd': 'co2_emission_reduction'}, '等效种植数目数量': {'h': 'co2_emission_reduction', 'd': 'co2_equal_num'}, '供热端补水量': {'h': 'heat_water_replenishment', 'd': 'heat_water_replenishment'}, '供热端补水量限值': {'h': 'heat_water_replenishment_limit', 'd': 'heat_water_replenishment_limit'}, '蓄热水池补水量': {'h': 'heat_storage_tank_replenishment', 'd': 'heat_storage_tank_replenishment'}, '太阳能侧补水量': {'h': 'solar_side_replenishment', 'd': 'solar_side_replenishment'}, '太阳能侧补水量限值': {'h': 'solar_side_replenishment_limit', 'd': 'solar_side_replenishment_limit'}, '系统综合COP能效': {'d': 'cop'}, '水源热泵COP能效': {'d': 'wshp_cop'}, '供暖保证率': {'d': 'heating_guarantee_rate'}, '集热效率': {'d': 'heat_collection_efficiency'}},
+        "tianjin": {'日期': 'time_data', 'MAU201风机频率': 'fan_frequency_201', 'MAU202风机频率': 'fan_frequency_202', 'MAU203风机频率': 'fan_frequency_203', 'MAU301风机频率': 'fan_frequency_301', 'MAU401风机频率': 'fan_frequency_401', 'MAU201冷水阀开度': 'cold_water_valve_201', 'MAU202冷水阀开度': 'cold_water_valve_202', 'MAU203冷水阀开度': 'cold_water_valve_203', 'MAU301冷水阀开度': 'cold_water_valve_301', 'MAU401冷水阀开度': 'cold_water_valve_401', 'MAU201热水阀开度': 'hot_water_valve_201', 'MAU202热水阀开度': 'hot_water_valve_202', 'MAU203热水阀开度': 'hot_water_valve_203', 'MAU301热水阀开度': 'hot_water_valve_301', 'MAU401热水阀开度': 'hot_water_valve_301', 'MAU201送风压力': 'air_supply_pressure_201', 'MAU202送风压力': 'air_supply_pressure_202', 'MAU203送风压力': 'air_supply_pressure_203', 'MAU301送风压力': 'air_supply_pressure_301', 'MAU401送风压力': 'air_supply_pressure_401', 'MAU201送风湿度': 'air_supply_humidity_201', 'MAU202送风湿度': 'air_supply_humidity_202', 'MAU203送风湿度': 'air_supply_humidity_203', 'MAU301送风湿度': 'air_supply_humidity_301', 'MAU401送风湿度': 'air_supply_humidity_401', 'MAU201送风温度': 'air_supply_temperature_201', 'MAU202送风温度': 'air_supply_temperature_202', 'MAU203送风温度': 'air_supply_temperature_203', 'MAU301送风温度': 'air_supply_temperature_301', 'MAU401送风温度': 'air_supply_temperature_401', '空气温度': 'temp', '空气湿度': 'humidity'}
+    }
+    return context
+
+
+def check_custom_file(file):
+    file_obj = pd.ExcelFile(file, engine="openpyxl")
+    line_type_error = "变量类型(line_type)配置异常,line_type需与variables对应且选择规范的图线类型"
+    variables_error = "变量(variables)配置异常,请确认对应数据板块下是否存在该变量"
+    sheetname_error = "表名称(sheet_name)配置异常,请确认是否设置sheet_name或sheet_name是否包含在规定条目中"
+    row_error = "行ID(row_id)配置异常,一行最多容纳两个图表"
+
+    # 检查sheetname
+    if not file_obj.sheet_names:
+        return False, sheetname_error
+
+    sheet_name = file_obj.sheet_names[0]
+    if sheet_name not in ["cona", "kamba", "tianjin"]:
+        return False, sheetname_error
+
+    # 检查字段
+    df = file_obj.parse(sheet_name=sheet_name)
+    columns = ["title", "x_name", "y_name", "y_unit", "variables", "line_types", "interval", "row_id"]
+    df_columns = df.columns
+    if len(df_columns) != len(columns):
+        return False, variables_error
+
+    for column in columns:
+        if column not in df_columns:
+            return False, variables_error
+
+    variables = df["variables"].values
+    interval = df["interval"].values
+    variables_items = [[item, interval[i]] for i in range(len(interval)) for item in variables[i].split("-")]
+    variables_mapping = get_custom_variables_mapping(sheet_name)
+
+    if "tianjin" in sheet_name:
+        for item, by in variables_items:
+            if not variables_mapping.get(item):
+                return False, variables_error
+            else:
+
+                if not variables_mapping[item].get(by):
+                    return False, variables_error
+
+    # 检查line_type
+    line_types = df["line_types"].values
+    for i in range(len(variables)):
+        l_types = line_types[i].split("-")
+        for item2 in ["heatmap", "pie", "area"]:
+            if item2 in l_types:
+                return False, line_type_error
+
+        l_vars = variables[i].split("-")
+        if len(l_types) != len(l_vars):
+            return False, line_type_error
+
+        if "bar" in l_types or "line" in l_types:
+            if "scatter" in l_types:
+                return False, line_type_error
+        elif "scatter" in l_types:
+            if "bar" in l_types or "line" in l_types:
+                return False, line_type_error
+
+
+
+    # 检查row_id
+    row_id, num_left = df["row_id"].values, 2
+    row_counter = collections.Counter(row_id)
+    for item in row_counter.values():
+        if item > 2:
+            return False, row_error
+
+    print("row_id通过")
+    return True, "验证通过"

@@ -9,26 +9,20 @@ import pandas as pd
 import numpy as np
 from data_center.settings import DATABASE, UPLOAD, DOWNLOAD
 from data_center.tools import gen_response, gen_time_range, get_common_response, get_last_time_range, \
-    get_correspondence_with_temp_chart_response, get_common_sql, gen_time_range, get_last_time_by_delta
+    get_correspondence_with_temp_chart_response, get_common_sql, gen_time_range, get_last_time_by_delta, file_iterator, \
+    check_custom_file
 import platform
 import os
 
 
-def file_iterator(filename, chunk_size=512):
-    with open(filename, 'rb') as f:
-        while True:
-            c=f.read(chunk_size)
-            if c:
-                yield c
-            else:
-                break
+
 
 
 class CustomizedView(APIView):
 
     @csrf_exempt
     def get(self, request):
-        context = {"cona_file": "cona.csv", "kamba_file": "kamba.csv", "tianjin_file": "tianjin.csv", "custom_file": "custom.csv"}
+        context = {"cona": "cona.xlsx", "kamba": "kamba.xlsx", "tianjin": "tianjin.xlsx", "custom": "custom.xlsx"}
         file_name = request.GET.get("file_name")
         key = request.GET.get("key")
         if key == "params_file_download":
@@ -51,25 +45,28 @@ class CustomizedView(APIView):
         start = request.data.get('start', None)
         end = request.data.get('end', None)
 
-        print(request.data)
-
         if not key:
             return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
 
         db = "tianjin_commons_data"
-
-        print("请求")
-
-        print(request.FILES)
-        file = request.FILES.get("my_file")
-        print(file, type(file))
-
-        # return Response({"status": "OK"}, status=HTTP_200_OK)
-
         if key == "upload_file":
             file = request.FILES.get("my_file")
 
-            return Response({"status": "OK"}, status=HTTP_200_OK)
+            file_path = os.path.join(UPLOAD, file.name)
+            try:
+                success, msg = check_custom_file(file)
+                if success:
+                    destination = open(file_path, 'wb+')  # 打开特定的文件进行二进制的写操作
+
+                    for chunk in file.chunks():  # 分块写入文件
+                        destination.write(chunk)
+                    destination.close()
+
+                    return Response({"status": "successful"}, status=HTTP_200_OK)
+                else:
+                    return Response({"status": "failure", "msg": msg}, status=HTTP_200_OK)
+            except Exception as e:
+                return Response({"status": "failure"}, status=HTTP_200_OK)
 
         # engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
         #             DATABASE[plate_form]["user"],
@@ -82,7 +79,7 @@ class CustomizedView(APIView):
         #
         #     if key == "params_file_download":
         #         file = request.data.get("file_name")
-        #         file_name = "kamba.csv" if file == "kamba" else "cona.csv"
+        #         file_name = "custom.csv" if file == "kamba" else "cona.csv"
         #         # file_path = os.path.join(UPLOAD, file_name)
         #         response = FileResponse(open(os.path.join(UPLOAD, file_name)))
         #         print(response)
