@@ -12,21 +12,25 @@ from datetime import datetime, timedelta
 
 API_HOST = {"local": "http://localhost:8000", "cloud": "http://cdqrmi.com:8000"}
 
-API_TYPE = {"common": "/common/", "cona": "/cona/", "kamba": "/kamba/", "tianjin": "/tianjin/"}
+API_TYPE = {"common": "/common/", "cona": "/cona/", "kamba": "/kamba/", "tianjin": "/tianjin/", "custom": "/custom/"}
 
 
 def get_params_data(block, base_data, random_date=False):
-    time_range = json.loads(test_api("common", {"key": "real_time", "block": block}))
-    if random_date:
-        start, end = map(lambda x: datetime.strptime(x, "%Y/%m/%d %H:%M:%S"), [time_range["start_limit"], time_range["end_limit"]])
-        dates = pd.date_range(start, end, freq="1D")
-        start = random.choice(dates)
-        end = start + timedelta(days=7)
-        base_data["start"] = start.strftime("%Y/%m/%d") + " 00:00:00"
-        base_data["end"] = end.strftime("%Y/%m/%d") + " 23:59:59"
-    else:
-        base_data["start"] = time_range["start"]
-        base_data["end"] = time_range["end"]
+    if base_data["key"] not in ["config_file", "custom_interface"]:
+
+        time_range = json.loads(test_api("common", {"key": "real_time", "block": block}))
+        if random_date:
+            start, end = map(lambda x: datetime.strptime(x, "%Y/%m/%d %H:%M:%S"),
+                             [time_range["start_limit"], time_range["end_limit"]])
+            dates = pd.date_range(start, end, freq="1D")
+            start = random.choice(dates)
+            end = start + timedelta(days=7)
+            base_data["start"] = start.strftime("%Y/%m/%d") + " 00:00:00"
+            base_data["end"] = end.strftime("%Y/%m/%d") + " 23:59:59"
+        else:
+            base_data["start"] = time_range["start"]
+            base_data["end"] = time_range["end"]
+
     return base_data
 
 
@@ -225,5 +229,34 @@ res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
 # 13. 室外空气温湿度
 # res = test_api(block, get_params_data(block, {"key": "air_temperature_and_humidity"}))
 
+# ************************* ******************** 测试 /tianjin 接口 END **************************************************
+# **********************************************************************************************************************
 
-# print(res)
+
+# *********************************************** 测试 /custom 接口 START ***********************************************
+block = "custom"
+res = test_api(block, get_params_data(block, {"key": "config_file"}))
+
+# res = test_api(
+#     block,
+#     {
+#         "key": "custom_interface",
+#         "series": json.dumps(
+#             {
+#                 "高温板换制热量": {"type": "bar", "data": "high_temp_plate_exchange_heat_production", "stack": "制热量"},
+#                 "水源热泵制热量": {"type": "bar", "data": "water_heat_pump_heat_production", "stack": "制热量"},
+#                 "地热井可提供高温热量": {"type": "line", "data": "geothermal_wells_high_heat_provide"},
+#                 "地热井可提供低温热量": {"type": "line", "data": "geothermal_wells_low_heat_provide"}
+#             }
+#         ),
+#         "block": "cona",
+#         "by": "d",
+#         "chart_type": "time",
+#         "start": "2021-05-08 00:00:00",
+#         "end": "2021-05-14 23:59:59"
+#     }
+# )
+
+
+
+print(res)

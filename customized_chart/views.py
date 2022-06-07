@@ -7,10 +7,11 @@ from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, H
 from sqlalchemy import create_engine
 import pandas as pd
 import numpy as np
+import json
 from data_center.settings import DATABASE, UPLOAD, DOWNLOAD
 from data_center.tools import gen_response, gen_time_range, get_common_response, get_last_time_range, \
     get_correspondence_with_temp_chart_response, get_common_sql, gen_time_range, get_last_time_by_delta, file_iterator, \
-    check_custom_file
+    check_custom_file, get_custom_variables_mapping, get_custom_response
 import platform
 import os
 
@@ -36,20 +37,17 @@ class CustomizedView(APIView):
 
     def post(self, request):
         plate_form = platform.system()
-        time_index = "time_data"
-        by = "h"
         data = {}
 
         # 获取参数
         key = request.data.get('key', None)
-        start = request.data.get('start', None)
-        end = request.data.get('end', None)
 
         if not key:
             return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
 
         db = "tianjin_commons_data"
         if key == "upload_file":
+
             file = request.FILES.get("my_file")
 
             file_path = os.path.join(UPLOAD, file.name)
@@ -62,45 +60,138 @@ class CustomizedView(APIView):
                         destination.write(chunk)
                     destination.close()
 
-                    return Response({"status": "successful"}, status=HTTP_200_OK)
+                    return Response({"status": "success"}, status=HTTP_200_OK)
                 else:
                     return Response({"status": "failure", "msg": msg}, status=HTTP_200_OK)
             except Exception as e:
                 return Response({"status": "failure"}, status=HTTP_200_OK)
+        elif key == "config_file":
+            data["charts"] = []
+            file_name = "custom_init.xlsx"
+            if os.path.exists(os.path.join(UPLOAD, "custom.xlsx")):
+                file_name = "custom.xlsx"
+            file_obj = pd.ExcelFile(os.path.join(UPLOAD, file_name), engine="openpyxl")
+            sheet_names = file_obj.sheet_names
+            sheet_name = sheet_names[0]  # sheet name
+            init_id = 1
+            df = file_obj.parse(sheet_name=sheet_name)
+            variables_mapping = get_custom_variables_mapping(sheet_name)    # 变量对应字段名称
 
-        # engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
-        #             DATABASE[plate_form]["user"],
-        #             DATABASE[plate_form]["password"],
-        #             DATABASE[plate_form]["host"],
-        #             DATABASE[plate_form]["database"]
-        #         )
-        # )
-        # try:
-        #
-        #     if key == "params_file_download":
-        #         file = request.data.get("file_name")
-        #         file_name = "custom.csv" if file == "kamba" else "cona.csv"
-        #         # file_path = os.path.join(UPLOAD, file_name)
-        #         response = FileResponse(open(os.path.join(UPLOAD, file_name)))
-        #         print(response)
-        #         response['content_type'] = "application/octet-stream"
-        #         response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_name)
-        #         return response
-        #
-        # except Exception as e:
-        #     print("异常", e)
-        #     import traceback
-        #     traceback.print_exc()
-        #     # engine.dispose()
-        # finally:
-        #     # engine.dispose()
-        #     if data:
-        #         return Response(data, status=HTTP_200_OK)
-        #     else:
-        #         return Response({"msg": "data error"}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+            for index in df.index:
+                interval = df.loc[index, "interval"]
+                tmp = {
+                    "chart_id": "chart_{}".format(init_id),
+                    "time_id": "time_{}".format(init_id),
+                    "line_id": df.loc[index, "row_id"],
+                    "title": df.loc[index, "title"],
+                }
+                x_name = df.loc[index, "x_name"]
+                # 确定x轴单位
+                if x_name == "日期":
+                    tmp.update({"xAxis": [{"name": "日期"}]})
+                else:
+                    if x_name == "气温" or x_name == "温度":
+                        tmp.update({"xAxis": [{"name": "气温", "unit": "℃", "data": "temp"}]})
+                    elif x_name in variables_mapping.keys():
+                        if "热量" in x_name or "耗电量" in x_name:
+                            unit = "kWh"
+                        elif "温度" in x_name or "温差" in x_name:
+                            unit = "℃"
+                        elif "负荷" in x_name or "功率" in x_name:
+                            unit = "kW"
+                        elif "补水" in x_name:
+                            unit = "m³"
+                        elif "费用" in x_name:
+                            unit = "元"
+                        elif "COP" in x_name:
+                            unit = ""
+                        elif "天数" in x_name:
+                            unit = "天"
+                        elif "树木数量" in x_name:
+                            unit = "棵"
+                        else:
+                            unit = ""
+                        tmp.update(
+                            {"xAxis": [{"name": x_name, "unit": unit, "data": variables_mapping[x_name][interval]}]}
+                        )
 
+                # 处理二进制解析导致的字符乱码（y轴单位）
+                y_unit = df.loc[index, "y_unit"]
+                if "m3" in y_unit:
+                    tmp.update({"yAxis": [{"name": df.loc[index, "y_name"], "unit": "m³"}]})
+                else:
+                    tmp.update({"yAxis": [{"name": df.loc[index, "y_name"], "unit": y_unit}]})
 
+                # series构建
+                series = {}
+                legend = df.loc[index, "variables"].split("-")
+                tmp["legend"] = legend
+                line_types = df.loc[index, "line_types"].split("-")
 
+                if sheet_name != "tianjin":
 
+                    tmp["request_data"] = {"by": interval}
+                    for legend_item, line_item in zip(legend, line_types):
+                        series.update(
+                            {legend_item: {"type": line_item, "data": variables_mapping[legend_item][interval]}}
+                        )
+                else:
+                    tmp["request_data"] = {}
+                    for legend_item, line_item in zip(legend, line_types):
+                        series.update({legend_item: {"type": line_item, "data": variables_mapping[legend_item]}})
+                tmp["series"] = series
+                data["charts"].append(tmp)
+                init_id += 1
+            data["block"] = sheet_name
+            return Response(data, status=HTTP_200_OK)
+        elif key == "custom_interface":
+            start = request.data.get('start', None)
+            end = request.data.get('end', None)
+            if not (start and end):
+                return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
 
+            by = request.data.get("by")
+            block = request.data.get("block")
+            x_data = request.data.get("x_data")
+            db = "tianjin_commons_data"
+            chart_type = request.data.get("chart_type")
+            is_timing = True if (not x_data and chart_type == "timing") else False
+
+            if by:
+                db = {
+                    "cona": {"h": "cona_hours_data", "d": "cona_days_data"},
+                    "kamba": {"h": "kamba_hours_data", "d": "kamba_days_data"},
+                }[block][by]
+            series = json.loads(request.data.get("series"))
+
+            engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
+                        DATABASE[plate_form]["user"],
+                        DATABASE[plate_form]["password"],
+                        DATABASE[plate_form]["host"],
+                        DATABASE[plate_form]["database"]
+                    )
+            )
+            try:
+                params = [item["data"] for item in series.values()]
+                if x_data:
+                    params = [x_data] + params
+
+                sql = "select time_data,{} from {} where time_data between '{}' and '{}'".format(
+                    ",".join(params), db, start, end
+                )
+                df = pd.read_sql(sql, con=engine)
+
+                data.update(get_custom_response(df, "time_data", by, chart_type, x_data))
+
+            except Exception as e:
+                print("异常", e)
+                import traceback
+                traceback.print_exc()
+                engine.dispose()
+            finally:
+                engine.dispose()
+                if data:
+                    return Response(data, status=HTTP_200_OK)
+                else:
+                    return Response({"msg": "data error"}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
