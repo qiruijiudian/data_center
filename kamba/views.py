@@ -200,7 +200,6 @@ class KambaView(APIView):
                 data["end"] = df_end.strftime("%Y/%m/%d")
                 data["last_year_start"] = last_df_start.strftime("%Y/%m/%d")
                 data["last_year_end"] = last_df_end.strftime("%Y/%m/%d")
-
             elif key == "solar_collector_analysis":
                 if by == "h":
                     return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
@@ -213,7 +212,6 @@ class KambaView(APIView):
                 params = ["time_data", "high_temperature_plate_exchange_heat", "wshp_heat"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
-
             elif key == "heat_production":
                 params = ["time_data", "heat_supply", "power_consume", "heat_supply_rate"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
@@ -244,11 +242,21 @@ class KambaView(APIView):
                 params = ["time_data", "solar_side_replenishment", "solar_side_replenishment_limit"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
+            elif key == "emission_reduction":
+                params = ["time_data", "co2_emission_reduction", "co2_power_consume"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                df["co2_emission_reduction"] = df["co2_emission_reduction"].cumsum()
+                df["co2_power_consume"] = df["co2_power_consume"].cumsum()
+                data.update(get_common_response(df, time_index, by))
+            elif key == "co2_equal_data":
+                params = ["time_data", "co2_emission_reduction", "co2_equal_num"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
 
         except Exception as e:
-            print("异常", e)
-            import traceback
-            traceback.print_exc()
+            # print("异常", e)
+            # import traceback
+            # traceback.print_exc()
             engine.dispose()
         finally:
             engine.dispose()

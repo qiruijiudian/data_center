@@ -164,11 +164,41 @@ class ConaView(APIView):
                 params = ["time_data", "water_replenishment", "water_replenishment_limit"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
+            elif key == "sub_com_cop":
+                cop_id = request.data.get("id")
+                context = {"2": "f2_cop", "3": "f3_cop", "4": "f4_cop", "5": "f5_cop"}
+                params = ["time_data"] + [context[cop_id]]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                df["Target Minimum"] = 6
+                df["Low Threshold"] = 4
+                data.update(get_common_response(df, time_index, by))
+                data["status"] = "数据异常" if ("" in df[params[-1]].values or None in df[params[-1]].values) else "正常"
+
+            elif key == "sub_wshp_cop":
+                cop_id = request.data.get("id")
+                context = {"2": "f2_whp_cop", "3": "f3_whp_cop", "4": "f4_whp_cop", "5": "f5_whp_cop"}
+                params = ["time_data"] + [context[cop_id]]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                df["Target Minimum"] = 6
+                df["Low Threshold"] = 4
+                data.update(get_common_response(df, time_index, by))
+                data["status"] = "数据异常" if ("" in df[params[-1]].values or None in df[params[-1]].values) else "正常"
+            elif key == "room_network_water_temperature":
+                item_name = request.data.get("id")
+                params = ["time_data", "temp"] + [item_name]
+                time_range = get_last_time_range(start, end)
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+
+                last_df = pd.read_sql(
+                    get_common_sql(params, db, time_range["last_start"], time_range["last_end"], time_index), con=engine
+                )
+
+                data.update(get_correspondence_with_temp_chart_response(df, last_df, time_range, params[-1]))
 
         except Exception as e:
-            print("异常", e)
-            import traceback
-            traceback.print_exc()
+            # print("异常", e)
+            # import traceback
+            # traceback.print_exc()
             engine.dispose()
         finally:
             engine.dispose()

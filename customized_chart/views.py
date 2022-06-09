@@ -184,9 +184,9 @@ class CustomizedView(APIView):
                 data.update(get_custom_response(df, "time_data", by, chart_type, x_data))
 
             except Exception as e:
-                print("异常", e)
-                import traceback
-                traceback.print_exc()
+                # print("异常", e)
+                # import traceback
+                # traceback.print_exc()
                 engine.dispose()
             finally:
                 engine.dispose()

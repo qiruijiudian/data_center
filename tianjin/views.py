@@ -117,19 +117,18 @@ class TianjinView(APIView):
                 try:
                     df = pd.read_sql(sql.format(start, end), con=weather_engine)
                     df["temp"] = (df["temp"] - 32) / 1.8
-                    print(df)
                     data.update(get_common_response(df, "time", by))
                 except Exception as e2:
-                    import traceback
-                    traceback.print_exc()
+                    # import traceback
+                    # traceback.print_exc()
                     weather_engine.dispose()
                 finally:
                     weather_engine.dispose()
 
         except Exception as e:
-            print("异常", e)
-            import traceback
-            traceback.print_exc()
+            # print("异常", e)
+            # import traceback
+            # traceback.print_exc()
             engine.dispose()
         finally:
             engine.dispose()
