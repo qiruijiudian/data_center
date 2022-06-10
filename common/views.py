@@ -44,7 +44,6 @@ class CommonView(APIView):
                         )
                         conn.commit()
                         data = Response({"status": "success", "token": auth_token}, status=HTTP_200_OK)
-
                 elif key == "token_check":
                     token = request.data.get("token")
                     cur.execute(

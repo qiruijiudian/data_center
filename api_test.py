@@ -191,7 +191,7 @@ block = "tianjin"
 # res = test_api(block, get_params_data(block, {"key": "panel_data"}))
 
 # 1. MAU风机频率
-res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
+# res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
 
 # 2. MAU冷热水阀开度201
 # res = test_api(block, get_params_data(block, {"key": "mau_water_valve_201"}))
@@ -235,7 +235,7 @@ res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
 
 # *********************************************** 测试 /custom 接口 START ***********************************************
 block = "custom"
-res = test_api(block, get_params_data(block, {"key": "config_file"}))
+res = test_api(block, get_params_data(block, {"key": "config_file"}), False)
 
 # res = test_api(
 #     block,
