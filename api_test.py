@@ -126,7 +126,7 @@ block = "kamba"
 # res = test_api(block, get_params_data(block, {"key": "wshp_cop", "by": "h"}, True))
 
 # 4. 水池温度热力图
-# res = test_api(block, get_params_data(block, {"key": "pool_temperature_heatmap", "by": "h"}))
+res = test_api(block, get_params_data(block, {"key": "pool_temperature_heatmap", "by": "h"}))
 
 # 5. 太阳能集热量
 # res = test_api(block, get_params_data(block, {"key": "solar_aollector", "by": "h"}))
@@ -235,7 +235,7 @@ block = "tianjin"
 
 # *********************************************** 测试 /custom 接口 START ***********************************************
 block = "custom"
-res = test_api(block, get_params_data(block, {"key": "config_file"}), False)
+# res = test_api(block, get_params_data(block, {"key": "config_file"}), False)
 
 # res = test_api(
 #     block,

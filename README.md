@@ -51,6 +51,8 @@ python manage.py runserver
 
 #### 4.3 `CustomizedView`
 
+![自定义模板解析.png](http://tva1.sinaimg.cn/large/bf776e91ly1h33a0367puj20qq07g74t.jpg)
+
 自定义模板接口，区别于此前的内容，此接口可以自定义数据渲染结构，按照所上传的文件返回配置文件进行图表渲染，`CustomizedView`接口中，GET请求处理文件下载（错那变量文件、岗巴变量文件、天津变量文件、自定义示例文件），在自定义图表格式的时候，**变量需要与各变量文件中的内容所对应**，否则无法通过文件校验过程,文件以excel文件格式存在，除了文件内各列所述参数外，还需要指定`sheetname`，设置详情可以参考[自定义文件设置示例](http://cdqrmi.com/DataCenter/custom_file.html)
 
 

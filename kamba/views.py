@@ -100,30 +100,40 @@ class KambaView(APIView):
 
                 df = pd.read_sql(get_common_sql(params, db, start, end, "Timestamp"), con=engine)
                 df = df.round(2).fillna("")
-                res, max_num, min_num = [], -np.inf, np.inf
+                res = {"0-4": {},  "4-8": {},  "8-12": {},  "12-16": {}, "16-20": {}, "20-24": {}}
+                max_num, min_num, values = -np.inf, np.inf, []
                 for column_index, column in enumerate(params[1:]):
                     for index in df.index:
                         hour = df.loc[index, "Timestamp"].hour
                         value = df.loc[index, column]
                         if 0 <= hour < 4:
-
-                            res.append(["0-4", height[column_index], value])
+                            hour_key = "0-4"
                         elif 4 <= hour < 8:
-                            res.append(["4-8", height[column_index], value])
+                            hour_key = "4-8"
                         elif 8 <= hour < 12:
-                            res.append(["8-12", height[column_index], value])
+                            hour_key = "8-12"
                         elif 12 <= hour < 16:
-                            res.append(["12-16", height[column_index], value])
+                            hour_key = "12-16"
                         elif 16 <= hour < 20:
-                            res.append(["16-20", height[column_index], value])
-                        elif 20 <= hour < 24:
-                            res.append(["20-24", height[column_index], value])
+                            hour_key = "16-20"
+                        else:
+                            hour_key = "20-24"
+
+                        if height[column_index] not in res[hour_key]:
+                            res[hour_key][height[column_index]] = [value]
+                        else:
+                            res[hour_key][height[column_index]].append(value)
 
                         if isinstance(value, float) and value > max_num:
                             max_num = value
                         if isinstance(value, float) and value < min_num:
                             min_num = value
-                data["values"] = res
+                for hour_item, value_item in res.items():
+                    for height_item, value_item2 in value_item.items():
+                        heat_value = [hour_item, height_item, round(sum(value_item2)/len(value_item2), 2)]
+                        if heat_value not in values:
+                            values.append(heat_value)
+                data["values"] = values
                 data["max"] = max_num
                 data["min"] = min_num
                 data["sizes"] = height
@@ -133,8 +143,6 @@ class KambaView(APIView):
                 df = pd.read_sql(get_common_sql(["time_data", "solar_collector"], db, start, end, time_index), con=engine)
 
                 data.update(get_common_response(df, time_index, by))
-            elif key == "":
-                pass
             elif key == "solar_matrix_water_temperature":
                 params = ["time_data", "solar_matrix_supply_water_temp", "solar_matrix_return_water_temp"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
