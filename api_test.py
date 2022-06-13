@@ -257,6 +257,4 @@ block = "custom"
 #     }
 # )
 
-
-
 print(res)
