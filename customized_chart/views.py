@@ -50,7 +50,7 @@ class CustomizedView(APIView):
 
             file = request.FILES.get("my_file")
 
-            file_path = os.path.join(UPLOAD, file.name)
+            file_path = os.path.join(UPLOAD, "custom.xlsx")
             try:
                 success, msg = check_custom_file(file)
                 if success:
