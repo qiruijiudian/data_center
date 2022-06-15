@@ -51,7 +51,7 @@ def test_api(u_type, data, is_local=True):
 
 # ********************************************** 测试 /common 接口 START ************************************************
 # 1. 账号密码登录
-# res = test_api("common", {"u_name": "tes", "pwd": "test2", "key": "login"})
+res = test_api("common", {"u_name": "tianjin", "pwd": "123456", "key": "login"})
 
 # 2. token验证
 # res = test_api("common", {"token": "d4a68b48afd923ca02ed5d6940f9f62d9385887d1decbe7717c77f315", "key": "token_check"})

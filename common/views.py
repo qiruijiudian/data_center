@@ -31,10 +31,12 @@ class CommonView(APIView):
                         return Response({'msg': 'params error'}, status=HTTP_404_NOT_FOUND)
 
                     cur.execute(
-                        "select username, password from user where username='{}' and password='{}'".format(u_name, pwd)
+                        "select username, password, level from user where username='{}' and password='{}'".format(u_name, pwd)
                     )
-                    if not cur.fetchone():
-                        data = Response({'msg': 'No such user'}, status=HTTP_403_FORBIDDEN)
+                    cur_res = cur.fetchone()
+
+                    if not cur_res:
+                        data = Response({'msg': '账号或密码错误，请修改输入信息后重试'}, status=HTTP_403_FORBIDDEN)
                     else:
                         # 生成令牌
                         login_expires = datetime.now() + timedelta(days=30)
@@ -43,21 +45,46 @@ class CommonView(APIView):
                             auth_token, login_expires, u_name)
                         )
                         conn.commit()
-                        data = Response({"status": "success", "token": auth_token}, status=HTTP_200_OK)
+                        level = cur_res[-1]
+                        if level == 0:
+                            index_url = "cona"
+                        elif level == 2:
+                            index_url = "tianjin"
+                        else:
+                            index_url = "kamba"
+
+                        data = Response({"status": "success", "token": auth_token, "index": index_url}, status=HTTP_200_OK)
                 elif key == "token_check":
                     token = request.data.get("token")
+                    block = request.data.get("block")
+                    if not all([token, block]) and block not in ["cona", "kamba", "tianjin", "custom"]:
+                        return Response({'msg': 'params error'}, status=HTTP_404_NOT_FOUND)
+
+                    allow_level = [3]
+
+                    if block == "cona":
+                        allow_level.append(0),
+                    elif block == "kamba":
+                        allow_level.append(1)
+                    elif block == "tianjin":
+                        allow_level.append(2)
+
                     cur.execute(
-                        'select username from user where auth_token="{}" and login_expires >= now()'.format(token)
+                        'select username, level from user where auth_token="{}" and login_expires >= now()'.format(token)
                     )
                     res = cur.fetchone()
+
                     if not res:
-                        data = Response({'status': 'failure'}, status=HTTP_403_FORBIDDEN)
+                        data = Response({"status": "failure", "msg": "login"}, status=HTTP_200_OK)
                     else:
-                        data = Response({'status': 'success', 'user': res[0]}, status=HTTP_200_OK)
+                        level = res[-1]
+                        if level not in allow_level:
+                            data = Response({"status": "failure", "msg": "permission"}, status=HTTP_200_OK)
+                        else:
+                            data = Response({"status": "success", 'user': res[0]}, status=HTTP_200_OK)
                 elif key == "real_time":
                     block = request.data.get("block")
                     time_range = get_block_time_range(block)
-                    print(time_range)
                     data = Response(time_range, status=HTTP_200_OK)
 
                 else:
