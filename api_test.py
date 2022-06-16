@@ -229,6 +229,8 @@ block = "tianjin"
 # 13. 室外空气温湿度
 # res = test_api(block, get_params_data(block, {"key": "air_temperature_and_humidity"}))
 
+# 14. item 与温度关系
+res = test_api(block, get_params_data(block, {"key": "mau_data_with_temp", "item": "sat"}))
 # ************************* ******************** 测试 /tianjin 接口 END **************************************************
 # **********************************************************************************************************************
 

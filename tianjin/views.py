@@ -6,7 +6,8 @@ import pandas as pd
 import numpy as np
 from data_center.settings import DATABASE
 from data_center.tools import gen_response, gen_time_range, get_common_response, get_last_time_range, \
-    get_correspondence_with_temp_chart_response, get_common_sql, gen_time_range, get_last_time_by_delta
+    get_correspondence_with_temp_chart_response, get_common_sql, gen_time_range, get_last_time_by_delta, \
+    get_compare_with_item
 import platform
 
 
@@ -106,29 +107,29 @@ class TianjinView(APIView):
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
             elif key == "air_temperature_and_humidity":
-                sql = "select time, temp, humidity from tianjin where time between '{}' and '{}'"
 
-                weather_engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
-                    DATABASE[plate_form]["user"],
-                    DATABASE[plate_form]["password"],
-                    DATABASE[plate_form]["host"],
-                    "weather"
-                ))
-                try:
-                    df = pd.read_sql(sql.format(start, end), con=weather_engine)
-                    df["temp"] = (df["temp"] - 32) / 1.8
-                    data.update(get_common_response(df, "time", by))
-                except Exception as e2:
-                    # import traceback
-                    # traceback.print_exc()
-                    weather_engine.dispose()
-                finally:
-                    weather_engine.dispose()
+                params = ["time_data", "air_temperature", "air_humidity"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+
+            elif key == "mau_data_with_temp":
+                params = ["time_data", "air_temperature"]
+                item = request.data.get("item")
+                if item == "sat":
+                    params.extend(["air_supply_temperature_201", "air_supply_temperature_202", "air_supply_temperature_203", "air_supply_temperature_301", "air_supply_temperature_401"])
+                elif item == "sap":
+                    params.extend(["air_supply_pressure_201", "air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401"])
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                print(df)
+                # print(df)
+                # data["status"] = "ok"
+
+                data.update(get_compare_with_item(df, time_index, "air_temperature"))
 
         except Exception as e:
             # print("异常", e)
-            # import traceback
-            # traceback.print_exc()
+            import traceback
+            traceback.print_exc()
             engine.dispose()
         finally:
             engine.dispose()

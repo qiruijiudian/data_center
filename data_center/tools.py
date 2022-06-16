@@ -38,6 +38,22 @@ def get_common_response(df, time_index, by, is_timing=True):
     return res
 
 
+def get_compare_with_item(df, time_index, with_column):
+    res = {}
+    df = df.round(2).fillna("")
+    with_values = df[with_column].values
+    print(time_index)
+    print(df.columns)
+    print(df["time_data"])
+    res["start"] = df[time_index].iloc[0].strftime("%Y/%m/%d")
+    res["end"] = df[time_index].iloc[-1].strftime("%Y/%m/%d")
+    columns = [item for item in df.columns if item != time_index]
+    for column in columns:
+        if column != with_column:
+            res[column] = list(zip(with_values, df[column].values))
+    return res
+
+
 def get_custom_response(df, time_index, by, chart_type, x_data):
     res = {}
     df = df.round(2).fillna("")
