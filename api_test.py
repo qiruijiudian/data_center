@@ -230,7 +230,7 @@ block = "tianjin"
 # res = test_api(block, get_params_data(block, {"key": "air_temperature_and_humidity"}))
 
 # 14. item 与温度关系
-res = test_api(block, get_params_data(block, {"key": "mau_data_with_temp", "item": "sat"}))
+# res = test_api(block, get_params_data(block, {"key": "mau_data_with_temp", "item": "sat"}))
 # ************************* ******************** 测试 /tianjin 接口 END **************************************************
 # **********************************************************************************************************************
 

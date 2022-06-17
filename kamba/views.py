@@ -46,6 +46,10 @@ class KambaView(APIView):
             elif key == "panel_data":
                 params, db = ["max_load", "min_load", "cost_saving"], "kamba_days_data"
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+
+                # TODO 小于0异常值处理
+                for param in params:
+                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
                 cost_saving_sum = df["cost_saving"].sum()
                 cs_sum = cost_saving_sum / 10000
                 if cs_sum >= 1:
@@ -150,7 +154,11 @@ class KambaView(APIView):
                 data.update(get_common_response(df, time_index, by))
             elif key == "load":
                 params = ["time_data", "max_load", "min_load", "avg_load"]
+
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                # TODO 小于0异常值处理
+                for param in params[1:]:
+                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
 
                 data.update(get_common_response(df, time_index, by))
             elif key == "end_water_supply_with_temp":
@@ -215,15 +223,27 @@ class KambaView(APIView):
                                  con=engine)
                 df["heating_guarantee_rate"] = df["heating_guarantee_rate"] * 100
 
+                # TODO 小于0异常值处理
+                for param in ["heat_supply", "solar_collector", "heating_guarantee_rate"]:
+                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
+
+
                 data.update(get_common_response(df, time_index, by))
             elif key == "heating_analysis":
                 params = ["time_data", "high_temperature_plate_exchange_heat", "wshp_heat"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                # TODO 小于0异常值处理
+                for param in params[1:]:
+                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
+
                 data.update(get_common_response(df, time_index, by))
             elif key == "heat_production":
                 params = ["time_data", "heat_supply", "power_consume", "heat_supply_rate"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 df["heat_supply_rate"] = df["heat_supply_rate"] * 100
+                # TODO 小于0异常值处理
+                for param in params[1:]:
+                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
                 data.update(get_common_response(df, time_index, by))
             elif key == "high_temperature_plate_exchange_heat_rate":
                 if by == "d":
@@ -234,6 +254,8 @@ class KambaView(APIView):
             elif key == "cost_saving":
                 params = ["time_data", "cost_saving", "power_consumption"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                # TODO 异常值 < 0
+                df["cost_saving"] = df["cost_saving"].apply(lambda x: x if x >= 0 else 0)
                 data.update(get_common_response(df, time_index, by))
             elif key == "end_water_temperature":
                 params = ["time_data", "end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff"]
@@ -262,9 +284,9 @@ class KambaView(APIView):
                 data.update(get_common_response(df, time_index, by))
 
         except Exception as e:
-            # print("异常", e)
-            # import traceback
-            # traceback.print_exc()
+            print("异常", e)
+            import traceback
+            traceback.print_exc()
             engine.dispose()
         finally:
             engine.dispose()
