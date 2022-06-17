@@ -111,7 +111,7 @@ block = "cona"
 # *********************************************** 测试 /kamba 接口 START **************************************************
 block = "kamba"
 # 1. 面板数据
-# res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+res = test_api(block, get_params_data(block, {"key": "panel_data"}))
 
 # 2. 蓄热水池高低温热量
 # res = test_api(block, get_params_data(block, {"key": "heat_storage_tank_heating", "by": "d"}))
@@ -231,6 +231,12 @@ block = "tianjin"
 
 # 14. item 与温度关系
 # res = test_api(block, get_params_data(block, {"key": "mau_data_with_temp", "item": "sat"}))
+
+# 15. item 设定值与温度关系
+res = test_api(block, get_params_data(block, {"key": "mau_set_point_with_temp", "item": "air_supply_temperature_201"}))
+
+
+
 # ************************* ******************** 测试 /tianjin 接口 END **************************************************
 # **********************************************************************************************************************
 

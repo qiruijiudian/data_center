@@ -120,10 +120,23 @@ class TianjinView(APIView):
                 elif item == "sap":
                     params.extend(["air_supply_pressure_201", "air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401"])
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                print(df)
-                # print(df)
-                # data["status"] = "ok"
+                data.update(get_compare_with_item(df, time_index, "air_temperature"))
+            elif key == "mau_set_point_with_temp":
 
+                params = ["time_data", "air_temperature"]
+                item = request.data.get("item")
+
+                if "temperature" in item:
+                    set_point = 8.2
+                elif "pressure" in item:
+                    set_point = 10.2
+                else:
+                    set_point = 99.9
+
+                params.append(item)
+
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                df["set_point"] = set_point
                 data.update(get_compare_with_item(df, time_index, "air_temperature"))
 
         except Exception as e:

@@ -46,7 +46,6 @@ class KambaView(APIView):
             elif key == "panel_data":
                 params, db = ["max_load", "min_load", "cost_saving"], "kamba_days_data"
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-
                 # TODO 小于0异常值处理
                 for param in params:
                     df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
@@ -226,7 +225,6 @@ class KambaView(APIView):
                 # TODO 小于0异常值处理
                 for param in ["heat_supply", "solar_collector", "heating_guarantee_rate"]:
                     df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
-
 
                 data.update(get_common_response(df, time_index, by))
             elif key == "heating_analysis":
