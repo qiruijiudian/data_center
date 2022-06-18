@@ -233,7 +233,7 @@ block = "tianjin"
 # res = test_api(block, get_params_data(block, {"key": "mau_data_with_temp", "item": "sat"}))
 
 # 15. item 设定值与温度关系
-res = test_api(block, get_params_data(block, {"key": "mau_set_point_with_temp", "item": "air_supply_temperature_201"}))
+# res = test_api(block, get_params_data(block, {"key": "mau_set_point_with_temp", "item": "air_supply_temperature_201"}))
 
 
 
@@ -245,24 +245,24 @@ res = test_api(block, get_params_data(block, {"key": "mau_set_point_with_temp", 
 block = "custom"
 # res = test_api(block, get_params_data(block, {"key": "config_file"}), False)
 
-# res = test_api(
-#     block,
-#     {
-#         "key": "custom_interface",
-#         "series": json.dumps(
-#             {
-#                 "高温板换制热量": {"type": "bar", "data": "high_temp_plate_exchange_heat_production", "stack": "制热量"},
-#                 "水源热泵制热量": {"type": "bar", "data": "water_heat_pump_heat_production", "stack": "制热量"},
-#                 "地热井可提供高温热量": {"type": "line", "data": "geothermal_wells_high_heat_provide"},
-#                 "地热井可提供低温热量": {"type": "line", "data": "geothermal_wells_low_heat_provide"}
-#             }
-#         ),
-#         "block": "cona",
-#         "by": "d",
-#         "chart_type": "time",
-#         "start": "2021-05-08 00:00:00",
-#         "end": "2021-05-14 23:59:59"
-#     }
-# )
+res = test_api(
+    block,
+    {
+        "key": "custom_interface",
+        "series": json.dumps(
+            {
+                "高温板换制热功率": {"type": "bar", "data": "high_temp_plate_exchange_heat_production", "stack": "制热量"},
+                "高温板换制热量": {"type": "bar", "data": "water_heat_pump_heat_production", "stack": "制热量"},
+                "地热井可提供高温热量": {"type": "line", "data": "geothermal_wells_high_heat_provide"},
+                "地热井可提供低温热量": {"type": "line", "data": "geothermal_wells_low_heat_provide"}
+            }
+        ),
+        "block": "cona",
+        "by": "d",
+        "chart_type": "time",
+        "start": "2021-05-08 00:00:00",
+        "end": "2021-05-14 23:59:59"
+    }
+)
 
 print(res)
