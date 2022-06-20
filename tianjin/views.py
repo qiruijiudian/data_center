@@ -119,7 +119,16 @@ class TianjinView(APIView):
                     params.extend(["air_supply_temperature_201", "air_supply_temperature_202", "air_supply_temperature_203", "air_supply_temperature_301", "air_supply_temperature_401"])
                 elif item == "sap":
                     params.extend(["air_supply_pressure_201", "air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401"])
+                elif item == "sah":
+                    params.extend(["air_supply_humidity_201", "air_supply_humidity_202", "air_supply_humidity_203", "air_supply_humidity_301", "air_supply_humidity_401"])
+
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                if item == "sat":
+                    df["set_point"] = 8.2
+                elif item == "sap":
+                    df["set_point"] = 10.2
+                else:
+                    df["set_point"] = 99.9
                 data.update(get_compare_with_item(df, time_index, "air_temperature"))
             elif key == "mau_set_point_with_temp":
 
