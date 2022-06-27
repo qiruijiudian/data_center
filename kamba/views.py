@@ -282,9 +282,9 @@ class KambaView(APIView):
                 data.update(get_common_response(df, time_index, by))
 
         except Exception as e:
-            print("异常", e)
-            import traceback
-            traceback.print_exc()
+            # print("异常", e)
+            # import traceback
+            # traceback.print_exc()
             engine.dispose()
         finally:
             engine.dispose()

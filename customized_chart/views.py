@@ -90,14 +90,14 @@ class CustomizedView(APIView):
                 if x_name == "日期":
                     tmp.update({"xAxis": [{"name": "日期"}]})
                 else:
-                    if x_name == "气温" or x_name == "温度":
+                    if x_name == "气温":
                         tmp.update({"xAxis": [{"name": "气温", "unit": "℃", "data": "temp"}]})
                     elif x_name in variables_mapping.keys():
                         if "热量" in x_name or "耗电量" in x_name:
                             unit = "kWh"
                         elif "温度" in x_name or "温差" in x_name:
                             unit = "℃"
-                        elif "负荷" in x_name or "功率" in x_name:
+                        elif "负荷" in x_name or "功率" in x_name or x_name == "总太阳能辐射量":
                             unit = "kW"
                         elif "补水" in x_name:
                             unit = "m³"
@@ -109,6 +109,14 @@ class CustomizedView(APIView):
                             unit = "天"
                         elif "树木数量" in x_name:
                             unit = "棵"
+                        elif x_name == "太阳能辐射量":
+                            unit = "W/m³"
+                        elif "流量" in x_name:
+                            unit = "m³/h"
+                        elif "风机频率" in x_name or "开度" in x_name or "湿度" in x_name:
+                            unit = "%"
+                        elif "送风压力" in x_name:
+                            unit = "Pa"
                         else:
                             unit = ""
                         tmp.update(
@@ -155,7 +163,6 @@ class CustomizedView(APIView):
             x_data = request.data.get("x_data")
             db = "tianjin_commons_data"
             chart_type = request.data.get("chart_type")
-            is_timing = True if (not x_data and chart_type == "timing") else False
 
             if by:
                 db = {
@@ -180,6 +187,12 @@ class CustomizedView(APIView):
                     ",".join(params), db, start, end
                 )
                 df = pd.read_sql(sql, con=engine)
+                for column in df.columns:
+                    if "load" in column or "heat_supply" in column or "solar_collector" in column \
+                            or "heating_guarantee_rate" in column or "high_temperature_plate_exchange_heat" in column \
+                            or "wshp_heat" in column or "power_consume" in column or "heat_supply_rate" in column \
+                            or "cost_saving" in column or "power_consumption" in column:
+                        df[column] = df[column].apply(lambda x: x if x >=0 else 0)
 
                 data.update(get_custom_response(df, "time_data", by, chart_type, x_data))
 

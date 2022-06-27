@@ -55,7 +55,6 @@ class TianjinView(APIView):
                         "max_pressure": "{} Pa".format(df.loc[:, ["air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401"]].max().values.max())
                     }
                 )
-
             elif key == "mau_fan_frequency":
                 params = ["time_data", "fan_frequency_201", "fan_frequency_202", "fan_frequency_203", "fan_frequency_301", "fan_frequency_401"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
@@ -100,6 +99,18 @@ class TianjinView(APIView):
                 data.update(get_common_response(df, time_index, by))
             elif key == "mau_air_supply_temp_and_humidity_401":
                 params = ["time_data", "air_supply_temperature_401", "air_supply_humidity_401"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_air_supply_temperature":
+
+                params = ["time_data", "air_supply_temperature_201", "air_supply_temperature_202", "air_supply_temperature_203",
+                          "air_supply_temperature_301", "air_supply_temperature_401"]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+            elif key == "mau_air_supply_humidity":
+                params = ["time_data", "air_supply_humidity_201", "air_supply_humidity_202",
+                          "air_supply_humidity_203",
+                          "air_supply_humidity_301", "air_supply_humidity_401"]
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
             elif key == "mau_air_supply_pressure":
