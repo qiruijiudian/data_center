@@ -20,7 +20,6 @@ from common.views import CommonView
 from kamba.views import KambaView
 from tianjin.views import TianjinView
 from customized_chart.views import CustomizedView
-from customized_chart import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("cona/", ConaView.as_view()),

@@ -17,8 +17,6 @@ import os
 
 
 
-
-
 class CustomizedView(APIView):
 
     @csrf_exempt
