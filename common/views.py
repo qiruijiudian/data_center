@@ -12,7 +12,7 @@ from hashlib import sha256
 class CommonView(APIView):
     def post(self, request):
         plate_form = platform.system()
-        db = DATABASE[plate_form]
+        db = DATABASE[plate_form]["user"]
         data = {}
         key = request.data.get("key")
 
@@ -31,7 +31,7 @@ class CommonView(APIView):
                         return Response({'msg': 'params error'}, status=HTTP_404_NOT_FOUND)
 
                     cur.execute(
-                        "select username, password, level from user where username='{}' and password='{}'".format(u_name, pwd)
+                        "select username, password, level from account where username='{}' and password='{}'".format(u_name, pwd)
                     )
                     cur_res = cur.fetchone()
 
@@ -41,7 +41,7 @@ class CommonView(APIView):
                         # 生成令牌
                         login_expires = datetime.now() + timedelta(days=30)
                         auth_token = sha256('{} {}'.format(u_name, login_expires).encode('utf-8')).hexdigest()
-                        cur.execute("update user set auth_token='{}',login_expires='{}' where username='{}'".format(
+                        cur.execute("update account set auth_token='{}',login_expires='{}' where username='{}'".format(
                             auth_token, login_expires, u_name)
                         )
                         conn.commit()
@@ -70,7 +70,7 @@ class CommonView(APIView):
                         allow_level.append(2)
 
                     cur.execute(
-                        'select username, level from user where auth_token="{}" and login_expires >= now()'.format(token)
+                        'select username, level from account where auth_token="{}" and login_expires >= now()'.format(token)
                     )
                     res = cur.fetchone()
 

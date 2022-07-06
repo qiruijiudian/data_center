@@ -6,15 +6,12 @@ from rest_framework.views import APIView
 from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_404_NOT_FOUND
 from sqlalchemy import create_engine
 import pandas as pd
-import numpy as np
 import json
 from data_center.settings import DATABASE, UPLOAD, DOWNLOAD
-from data_center.tools import gen_response, gen_time_range, get_common_response, get_last_time_range, \
-    get_correspondence_with_temp_chart_response, get_common_sql, gen_time_range, get_last_time_by_delta, file_iterator, \
-    check_custom_file, get_custom_variables_mapping, get_custom_response
+from data_center.tools import file_iterator, check_custom_file, get_custom_variables_mapping, get_custom_response, \
+    get_common_df
 import platform
 import os
-
 
 
 class CustomizedView(APIView):
@@ -170,10 +167,10 @@ class CustomizedView(APIView):
             series = json.loads(request.data.get("series"))
 
             engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
-                        DATABASE[plate_form]["user"],
-                        DATABASE[plate_form]["password"],
-                        DATABASE[plate_form]["host"],
-                        DATABASE[plate_form]["database"]
+                        DATABASE[plate_form]["data"]["user"],
+                        DATABASE[plate_form]["data"]["password"],
+                        DATABASE[plate_form]["data"]["host"],
+                        DATABASE[plate_form]["data"]["database"]
                     )
             )
             try:
@@ -181,23 +178,20 @@ class CustomizedView(APIView):
                 if x_data:
                     params = [x_data] + params
 
-                sql = "select time_data,{} from {} where time_data between '{}' and '{}'".format(
-                    ",".join(params), db, start, end
-                )
-                df = pd.read_sql(sql, con=engine)
+                df = get_common_df(params, db, start, end, "time_data", engine)
                 for column in df.columns:
                     if "load" in column or "heat_supply" in column or "solar_collector" in column \
                             or "heating_guarantee_rate" in column or "high_temperature_plate_exchange_heat" in column \
                             or "wshp_heat" in column or "power_consume" in column or "heat_supply_rate" in column \
                             or "cost_saving" in column or "power_consumption" in column:
-                        df[column] = df[column].apply(lambda x: x if x >=0 else 0)
+                        df[column] = df[column].apply(lambda x: x if x >= 0 else 0)
 
-                data.update(get_custom_response(df, "time_data", by, chart_type, x_data))
+                data.update(get_custom_response(df, by, chart_type, x_data))
 
             except Exception as e:
                 # print("异常", e)
-                # import traceback
-                # traceback.print_exc()
+                import traceback
+                traceback.print_exc()
                 engine.dispose()
             finally:
                 engine.dispose()

@@ -51,13 +51,13 @@ def test_api(u_type, data, is_local=True):
 
 # ********************************************** 测试 /common 接口 START ************************************************
 # 1. 账号密码登录
-res = test_api("common", {"u_name": "tianjin", "pwd": "123456", "key": "login"})
+# res = test_api("common", {"u_name": "tianjin", "pwd": "123456", "key": "login"})
 
 # 2. token验证
-# res = test_api("common", {"token": "d4a68b48afd923ca02ed5d6940f9f62d9385887d1decbe7717c77f315", "key": "token_check"})
+# res = test_api("common", {"token": "fea2700a631cb000e5b244b8112ee43560e5b67e3b8723f8c83fcc90fb9545b8", "key": "token_check", "block": "tianjin"})
 
 # 3. 某板块时间范围
-# res = test_api("common", {"key": "real_time", "block": "cona"})
+# res = test_api("common", {"key": "real_time", "block": "tianjin"})
 
 # ************************* ******************** 测试 /common 接口 END **************************************************
 # **********************************************************************************************************************
@@ -75,7 +75,7 @@ block = "cona"
 # res = test_api(block, get_params_data(block, {"key": "geothermal_wells_provide_heat", "by": "d"}))
 
 # 4. 系统COP
-# res = test_api(block, get_params_data(block, {"key": "com_cop", "by": "h"}, True))
+# res = test_api(block, get_params_data(block, {"key": "com_cop", "by": "h"}, False))
 
 # 5. 节省供暖费用
 # res = test_api(block, get_params_data(block, {"key": "cost_saving", "by": "d"}, True))
@@ -111,7 +111,7 @@ block = "cona"
 # *********************************************** 测试 /kamba 接口 START **************************************************
 block = "kamba"
 # 1. 面板数据
-res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+# res = test_api(block, get_params_data(block, {"key": "panel_data"}))
 
 # 2. 蓄热水池高低温热量
 # res = test_api(block, get_params_data(block, {"key": "heat_storage_tank_heating", "by": "d"}))
@@ -129,7 +129,7 @@ res = test_api(block, get_params_data(block, {"key": "panel_data"}))
 # res = test_api(block, get_params_data(block, {"key": "pool_temperature_heatmap", "by": "h"}))
 
 # 5. 太阳能集热量
-# res = test_api(block, get_params_data(block, {"key": "solar_aollector", "by": "h"}))
+# res = test_api(block, get_params_data(block, {"key": "solar_collector", "by": "h"}))
 
 # 6. 太阳能矩阵供回水温度
 # res = test_api(block, get_params_data(block, {"key": "solar_matrix_water_temperature", "by": "h"}))
@@ -141,13 +141,13 @@ res = test_api(block, get_params_data(block, {"key": "panel_data"}))
 # res = test_api(block, get_params_data(block, {"key": "heat_replenishment", "by": "h"}))
 
 # 9. 太阳能测补水量
-# res = test_api(block, get_params_data(block, {"key": "solar_side_replenishment", "by": "h"}))
+res = test_api(block, get_params_data(block, {"key": "solar_side_replenishment", "by": "h"}))
 
 # 10. 负荷量
 # res = test_api(block, get_params_data(block, {"key": "load", "by": "d"}))
 
 # 11. 负荷量
-# res = test_api(block, get_params_data(block, {"key": "load", "by": "d"}))
+# res = test_api(block, get_params_data(block, {"key": "load", "by": "h"}))
 
 
 # 12. 末端供水与气温关系
@@ -212,10 +212,10 @@ block = "tianjin"
 # res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_201"}))
 
 # 8. MAU冷热水阀开度202
-# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_203"}))
+# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_202"}))
 
 # 9. MAU冷热水阀开度203
-# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_204"}))
+# res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_203"}))
 
 # 10. MAU冷热水阀开度301
 # res = test_api(block, get_params_data(block, {"key": "mau_air_supply_temp_and_humidity_301"}))
@@ -245,24 +245,24 @@ block = "tianjin"
 block = "custom"
 # res = test_api(block, get_params_data(block, {"key": "config_file"}), False)
 
-res = test_api(
-    block,
-    {
-        "key": "custom_interface",
-        "series": json.dumps(
-            {
-                "高温板换制热功率": {"type": "bar", "data": "high_temp_plate_exchange_heat_production", "stack": "制热量"},
-                "高温板换制热量": {"type": "bar", "data": "water_heat_pump_heat_production", "stack": "制热量"},
-                "地热井可提供高温热量": {"type": "line", "data": "geothermal_wells_high_heat_provide"},
-                "地热井可提供低温热量": {"type": "line", "data": "geothermal_wells_low_heat_provide"}
-            }
-        ),
-        "block": "cona",
-        "by": "d",
-        "chart_type": "time",
-        "start": "2021-05-08 00:00:00",
-        "end": "2021-05-14 23:59:59"
-    }
-)
+# res = test_api(
+#     block,
+#     {
+#         "key": "custom_interface",
+#         "series": json.dumps(
+#             {
+#                 "高温板换制热功率": {"type": "bar", "data": "high_temp_plate_exchange_heat_production", "stack": "制热量"},
+#                 "高温板换制热量": {"type": "bar", "data": "water_heat_pump_heat_production", "stack": "制热量"},
+#                 "地热井可提供高温热量": {"type": "line", "data": "geothermal_wells_high_heat_provide"},
+#                 "地热井可提供低温热量": {"type": "line", "data": "geothermal_wells_low_heat_provide"}
+#             }
+#         ),
+#         "block": "cona",
+#         "by": "d",
+#         "chart_type": "time",
+#         "start": "2021-05-08 00:00:00",
+#         "end": "2021-05-14 23:59:59"
+#     }
+# )
 
 print(res)

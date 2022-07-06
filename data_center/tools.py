@@ -12,60 +12,68 @@ from data_center.settings import DATABASE
 import operator
 
 
-def gen_time_range(df, time_index):
+def gen_time_range(df):
     res = {
-        "start": df[time_index].iloc[0].strftime("%Y/%m/%d"),
-        "end": df[time_index].iloc[-1].strftime("%Y/%m/%d")
+        "start": df.index[0].strftime("%Y/%m/%d"),
+        "end": df.index[-1].strftime("%Y/%m/%d")
     }
     return res
 
 
-def get_common_response(df, time_index, by, is_timing=True):
+def get_common_response(df, by, is_timing=True):
+    """获取常用返回值（开始、结束、每列值）
+
+    :param df:
+    :param time_index:
+    :param by:
+    :param is_timing: 是否为时序图，如果为时序图则会按照时序格式（包含字典的列表 ）
+    :return:
+    """
     res = {}
     df = df.round(2).fillna("")
 
-    res["start"] = df[time_index].iloc[0].strftime("%Y/%m/%d")
-    res["end"] = df[time_index].iloc[-1].strftime("%Y/%m/%d")
+    res["start"] = df.index[0].strftime("%Y/%m/%d")
+    res["end"] = df.index[-1].strftime("%Y/%m/%d")
     if is_timing:
         time_format = "%Y/%m/%d" if by == "d" else "%Y/%m/%d %H:%M:%S"
-        time_data = df[time_index].apply(lambda x: x.strftime(time_format))
+        time_data = list(map(lambda x: x.strftime(time_format), df.index))
 
         for column in df.columns:
-            if column != time_index:
-                items = list(zip(time_data.values, df[column].values))
-                res[column] = [{"value": item} for item in items]
 
+            items = list(zip(time_data, df[column].values))
+            res[column] = [{"value": item} for item in items]
+    else:
+        for column in df.columns:
+            res[column] = df[column].values
     return res
 
 
-def get_compare_with_item(df, time_index, with_column):
+def get_compare_with_item(df, with_column):
     res = {}
     df = df.round(2).fillna("")
     with_values = df[with_column].values
-    res["start"] = df[time_index].iloc[0].strftime("%Y/%m/%d")
-    res["end"] = df[time_index].iloc[-1].strftime("%Y/%m/%d")
-    columns = [item for item in df.columns if item != time_index]
-    for column in columns:
+    res["start"] = df.index[0].strftime("%Y/%m/%d")
+    res["end"] = df.index[-1].strftime("%Y/%m/%d")
+    for column in df.columns:
         if column != with_column:
             res[column] = list(zip(with_values, df[column].values))
     return res
 
 
-def get_custom_response(df, time_index, by, chart_type, x_data):
+def get_custom_response(df, by, chart_type, x_data):
     res = {}
     df = df.round(2).fillna("")
 
-    res["start"] = df[time_index].iloc[0].strftime("%Y/%m/%d")
-    res["end"] = df[time_index].iloc[-1].strftime("%Y/%m/%d")
+    res["start"] = df.index[0].strftime("%Y/%m/%d")
+    res["end"] = df.index[-1].strftime("%Y/%m/%d")
     if chart_type == "timing":
         if not x_data:
             time_format = "%Y/%m/%d" if by == "d" else "%Y/%m/%d %H:%M:%S"
-            time_data = df[time_index].apply(lambda x: x.strftime(time_format))
-
+            time_data = [item.strftime(time_format) for item in df.index]
             for column in df.columns:
-                if column != time_index:
-                    items = list(zip(time_data.values, df[column].values))
-                    res[column] = [{"value": item} for item in items]
+
+                items = list(zip(time_data, df[column].values))
+                res[column] = [{"value": item} for item in items]
 
         else:
             for column in df.columns:
@@ -80,18 +88,47 @@ def get_custom_response(df, time_index, by, chart_type, x_data):
 
 
 def get_common_sql(params, db, start, end, time_key):
-    common_sql = "select {} from {} where {} between '{}' and '{}'"
+    common_sql = "select * from {} where pointname in {} and '{}' bewteen '{}' and '{}'".format(
+        db, tuple(params), time_key, start, end
+    )
+
     return common_sql.format(",".join(params), db, time_key, start, end)
 
 
+def get_common_df(params, db, start, end, time_key, engine):
+    if len(params) > 1:
+        common_sql = "select * from {} where pointname in {} and {} between '{}' and '{}'".format(
+            db, tuple(params), time_key, start, end
+        )
+    else:
+        common_sql = "select * from {} where pointname = '{}' and {} between '{}' and '{}'".format(
+            db, params[0], time_key, start, end
+        )
+    df = pd.read_sql(common_sql, con=engine)
+    return df.pivot(index=time_key, columns="pointname", values="value")
+
+
+
 def get_correspondence_with_temp_chart_response(df, last_df, time_range, value_column, temp_column="temp"):
+    """获取XX（value_column）与XX(默认为温度)的关系
+
+    :param df:实时数据
+    :param last_df: 上周期数据
+    :param time_range: 时间周期
+    :param value_column: 变量名称
+    :param temp_column: 比较变量名称
+    :return:
+    """
     res = {}
     df, last_df = map(lambda x: x.round(2).fillna(""), [df, last_df])
+
+    # 处理时间参数 将 xxxx/xx/xx xx:xx:xx 后面的时分秒去除
     for k, v in time_range.items():
         if " " in v:
             res[k] = v.split(" ")[0]
         else:
             res[k] = v
+
     res["values"] = list(zip(df[temp_column].values, df[value_column].values))
     res["last_values"] = list(zip(last_df[temp_column].values, last_df[value_column].values))
     return res
@@ -124,7 +161,7 @@ def gen_response(df, time_index, by):
 
 def get_block_time_range(block):
     start_limit = {"cona": "2020/12/31 00:00:00", "kamba": "2020/08/17 00:00:00", "tianjin": "2022/03/15 00:00:00"}
-    db = DATABASE[platform.system()]
+    db = DATABASE[platform.system()]["data"]
     res = None
     with pymysql.connect(host=db["host"], user=db["user"], password=db["password"], database=db["database"]) as conn:
         cur = conn.cursor()
