@@ -200,12 +200,10 @@ class KambaView(APIView):
                 for column in ["end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff"]:
                     data[column] = list(zip(temp, df[column].values))
                     data["last_" + column] = list(zip(last_temp, last_df[column].values))
-                df_start, df_end = df.iloc[0]["time_data"], df.iloc[-1]["time_data"]
-                last_df_start, last_df_end = last_df.iloc[0]["time_data"], last_df.iloc[-1]["time_data"]
-                data["start"] = df_start.strftime("%Y/%m/%d")
-                data["end"] = df_end.strftime("%Y/%m/%d")
-                data["last_year_start"] = last_df_start.strftime("%Y/%m/%d")
-                data["last_year_end"] = last_df_end.strftime("%Y/%m/%d")
+                data["start"] = df.index[0].strftime("%Y/%m/%d")
+                data["end"] = df.index[-1].strftime("%Y/%m/%d")
+                data["last_year_start"] = last_df.index[0].strftime("%Y/%m/%d")
+                data["last_year_end"] = last_df.index[-1].strftime("%Y/%m/%d")
             elif key == "solar_collector_analysis":
                 if by == "h":
                     return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)

@@ -107,10 +107,24 @@ class TianjinView(APIView):
                           "air_supply_temperature_301", "air_supply_temperature_401"]
                 df = get_common_df(params, db, start, end, time_index, engine)
                 data.update(get_common_response(df, by))
+            elif key == "mau_air_supply_temperature_specify":
+                temp_id = request.data.get("id")
+                if not id:
+                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
+                params = ["air_supply_temperature_" + temp_id]
+                df = get_common_df(params, db, start, end, time_index, engine)
+                data.update(get_common_response(df, by))
             elif key == "mau_air_supply_humidity":
                 params = ["air_supply_humidity_201", "air_supply_humidity_202",
                           "air_supply_humidity_203",
                           "air_supply_humidity_301", "air_supply_humidity_401"]
+                df = get_common_df(params, db, start, end, time_index, engine)
+                data.update(get_common_response(df, by))
+            elif key == "mau_air_supply_humidity_specify":
+                hum_id = request.data.get("id")
+                if not id:
+                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
+                params = ["air_supply_humidity_" + hum_id]
                 df = get_common_df(params, db, start, end, time_index, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_pressure":

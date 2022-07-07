@@ -249,6 +249,7 @@ def check_custom_file(file):
     variables_error = "变量(variables)配置异常,请确认对应数据板块下是否存在该变量"
     sheetname_error = "表名称(sheet_name)配置异常,请确认是否设置sheet_name或sheet_name是否包含在规定条目中"
     row_error = "行ID(row_id)配置异常,一行最多容纳两个图表"
+    x_name_error = "横轴配置异常(xAxis)，请确认该图表类型是否支持对应横轴设置"
 
     # 检查sheetname
     if not file_obj.sheet_names:
@@ -315,4 +316,11 @@ def check_custom_file(file):
             return False, row_error
 
     # print("row_id通过")
+
+    # scatter x_name只能为气温 时序图 x_name只能为日期
+    for c_xname, ctype in zip(df["x_name"], df["line_types"]):
+        if "scatter" in ctype and c_xname != "气温":
+            return False, x_name_error
+        elif "scatter" not in ctype and c_xname != "日期":
+            return False, x_name_error
     return True, "验证通过"
