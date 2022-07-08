@@ -31,10 +31,10 @@ class KambaView(APIView):
         db = "kamba_hours_data" if by and by.strip() == "h" else "kamba_days_data"
 
         engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
-                    DATABASE[plate_form]["user"],
-                    DATABASE[plate_form]["password"],
-                    DATABASE[plate_form]["host"],
-                    DATABASE[plate_form]["database"]
+                    DATABASE[plate_form]["data"]["user"],
+                    DATABASE[plate_form]["data"]["password"],
+                    DATABASE[plate_form]["data"]["host"],
+                    DATABASE[plate_form]["data"]["database"]
                 )
         )
         try:
@@ -88,7 +88,7 @@ class KambaView(APIView):
                 data.update(get_common_response(df, time_index, by))
                 data["status"] = "数据异常" if ("" in df["wshp_cop"].values or None in df["wshp_cop"].values) else "正常"
             elif key == "pool_temperature_heatmap":
-                db = "kamba_hours_pool_data"
+                db = "kamba_hours_pool_temperature"
                 if not end:
                     return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
                 day = end.split(" ")[0]

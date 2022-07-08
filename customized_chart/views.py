@@ -170,10 +170,10 @@ class CustomizedView(APIView):
             series = json.loads(request.data.get("series"))
 
             engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
-                        DATABASE[plate_form]["user"],
-                        DATABASE[plate_form]["password"],
-                        DATABASE[plate_form]["host"],
-                        DATABASE[plate_form]["database"]
+                        DATABASE[plate_form]["data"]["user"],
+                        DATABASE[plate_form]["data"]["password"],
+                        DATABASE[plate_form]["data"]["host"],
+                        DATABASE[plate_form]["data"]["database"]
                     )
             )
             try:
@@ -190,7 +190,7 @@ class CustomizedView(APIView):
                             or "heating_guarantee_rate" in column or "high_temperature_plate_exchange_heat" in column \
                             or "wshp_heat" in column or "power_consume" in column or "heat_supply_rate" in column \
                             or "cost_saving" in column or "power_consumption" in column:
-                        df[column] = df[column].apply(lambda x: x if x >=0 else 0)
+                        df[column] = df[column].apply(lambda x: x if x >= 0 else 0)
 
                 data.update(get_custom_response(df, "time_data", by, chart_type, x_data))
 

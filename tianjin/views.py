@@ -32,10 +32,10 @@ class TianjinView(APIView):
         db = "tianjin_commons_data"
 
         engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
-                    DATABASE[plate_form]["user"],
-                    DATABASE[plate_form]["password"],
-                    DATABASE[plate_form]["host"],
-                    DATABASE[plate_form]["database"]
+                    DATABASE[plate_form]["data"]["user"],
+                    DATABASE[plate_form]["data"]["password"],
+                    DATABASE[plate_form]["data"]["host"],
+                    DATABASE[plate_form]["data"]["database"]
                 )
         )
         try:
@@ -158,6 +158,23 @@ class TianjinView(APIView):
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 df["set_point"] = set_point
                 data.update(get_compare_with_item(df, time_index, "air_temperature"))
+            elif key == "mau_air_supply_temperature_specify":
+                temp_id = request.data.get("id")
+                if not id:
+                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
+                params = ["time_data", "air_supply_temperature_" + temp_id]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+
+            elif key == "mau_air_supply_humidity_specify":
+                hum_id = request.data.get("id")
+                if not id:
+                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
+                params = ["time_data", "air_supply_humidity_" + hum_id]
+
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
+
 
         except Exception as e:
             # print("异常", e)

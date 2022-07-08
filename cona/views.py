@@ -31,10 +31,10 @@ class ConaView(APIView):
         db = "cona_hours_data" if by and by.strip() == "h" else "cona_days_data"
 
         engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
-                    DATABASE[plate_form]["user"],
-                    DATABASE[plate_form]["password"],
-                    DATABASE[plate_form]["host"],
-                    DATABASE[plate_form]["database"]
+                    DATABASE[plate_form]["data"]["user"],
+                    DATABASE[plate_form]["data"]["password"],
+                    DATABASE[plate_form]["data"]["host"],
+                    DATABASE[plate_form]["data"]["database"]
                 )
         )
         try:
@@ -197,8 +197,8 @@ class ConaView(APIView):
 
         except Exception as e:
             # print("异常", e)
-            # import traceback
-            # traceback.print_exc()
+            import traceback
+            traceback.print_exc()
             engine.dispose()
         finally:
             engine.dispose()

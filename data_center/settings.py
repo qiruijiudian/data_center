@@ -157,16 +157,32 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DATABASE = {
     "Windows": {
-        "host": "localhost",
-        "user": "root",
-        "password": "299521",
-        "database": "data_center_statistical"
+        "data": {
+            "host": "localhost",
+            "user": "root",
+            "password": "cdqr2008",
+            "database": "data_center_statistical_wide"
+        },
+        "user": {
+            "host": "localhost",
+            "user": "root",
+            "password": "cdqr2008",
+            "database": "data_center_user"
+        }
     },
     "Linux": {
-        "host": "121.199.48.82",
-        "user": "root",
-        "password": "cdqr2008",
-        "database": "data_center_statistical"
+        "data": {
+            "host": "121.199.48.82",
+            "user": "root",
+            "password": "cdqr2008",
+            "database": "data_center_statistical_wide"
+        },
+        "user": {
+            "host": "121.199.48.82",
+            "user": "root",
+            "password": "cdqr2008",
+            "database": "data_center_user"
+        }
     }
 }
 
