@@ -105,3 +105,65 @@ r = requests.post(url, data=data)	# 发起POST请求
 print(r.text)
 ~~~
 
+
+
+### 6. 本地测试
+
+网页功能测试需要后端代码配合上前端的页面代码，且需要提前部署本地数据库，这里的测试案例使用云服务器的数据库来做演示
+
+#### 6.1 第一步：克隆或拉取最新代码
+
+- 后端代码方面：测试版本的代码放在`github`的test分支下，如果第一次克隆代码使用`git clone -b test https://github.com/qiruijiudian/data_center.git`,如果此前克隆过代码可使用`git pull`更新最新代码`git pull origin test:test`
+- 前端代码和其他板块代码都只保留主分支，直接克隆或者拉取即可
+
+~~~
+1. 拉取/克隆后端代码
+
+git clone -b test https://github.com/qiruijiudian/data_center.git
+
+2. 拉取/克隆前端代码
+git clone https://github.com/qiruijiudian/data_center_web.git
+~~~
+
+
+
+**执行完代码准备阶段，此时的代码结构如下：**
+
+├─data_center
+└─data_center_web
+
+
+
+#### 6.2 第二步：安装后端代码环境依赖库
+
+~~~
+cd data_center
+
+pip install -r requirements.txt
+~~~
+
+
+
+#### 6.3 第三步：开启后端服务
+
+```
+cd data_center(如果已在data_center根目录下可忽略)
+python manage.py runserver
+
+```
+
+
+
+#### 6.4 第四步：用服务器模式访问网页
+
+- 保证目前的路径在项目根路径下，即当前目录为
+  - ├─data_center
+    └─data_center_web
+- 分别用`cmd`在当前目录下依次执行以下指令：
+
+```
+python -m http.server 8080
+start http://localhost:8080/data_center_web/kamba.html
+
+```
+
