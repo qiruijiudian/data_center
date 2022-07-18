@@ -158,13 +158,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DATABASE = {
     "Windows": {
         "data": {
-            "host": "localhost",
+            "host": "121.199.48.82",
             "user": "root",
             "password": "cdqr2008",
             "database": "data_center_statistical"
         },
         "user": {
-            "host": "localhost",
+            "host": "121.199.48.82",
             "user": "root",
             "password": "cdqr2008",
             "database": "data_center_user"
