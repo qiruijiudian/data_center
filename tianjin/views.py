@@ -172,6 +172,16 @@ class TianjinView(APIView):
                 df = get_common_df(params, db, start, end, time_index, engine)
                 df["set_point"] = set_point
                 data.update(get_compare_with_item(df, "air_temperature"))
+            elif key == "combined_data":
+                item_id = request.data.get("id")
+                if not item_id:
+                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
+                params = [item.format(item_id) for item in [
+                    "fan_frequency_{}", "cold_water_valve_{}", "hot_water_valve_{}", "air_supply_humidity_{}",
+                    "air_supply_temperature_{}"]
+                          ]
+                df = get_common_df(params, db, start, end, time_index, engine)
+                data.update(get_common_response(df, by))
 
         except Exception as e:
             # print("异常", e)
