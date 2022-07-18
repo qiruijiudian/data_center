@@ -174,7 +174,16 @@ class TianjinView(APIView):
 
                 df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
                 data.update(get_common_response(df, time_index, by))
-
+            elif key == "combined_data":
+                item_id = request.data.get("id")
+                if not item_id:
+                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
+                params = ["time_data"] + [item.format(item_id) for item in [
+                    "fan_frequency_{}", "cold_water_valve_{}", "hot_water_valve_{}", "air_supply_humidity_{}",
+                    "air_supply_temperature_{}"]
+                          ]
+                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+                data.update(get_common_response(df, time_index, by))
 
         except Exception as e:
             # print("异常", e)
