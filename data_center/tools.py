@@ -108,7 +108,6 @@ def get_common_df(params, db, start, end, time_key, engine):
     return df.pivot(index=time_key, columns="pointname", values="value")
 
 
-
 def get_correspondence_with_temp_chart_response(df, last_df, time_range, value_column, temp_column="temp"):
     """获取XX（value_column）与XX(默认为温度)的关系
 

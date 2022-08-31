@@ -22,6 +22,7 @@ class TianjinView(APIView):
         key = request.data.get('key', None)
         start = request.data.get('start', None)
         end = request.data.get('end', None)
+        block = request.data.get('block', None)
 
         if not key:
             return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
@@ -40,19 +41,31 @@ class TianjinView(APIView):
         )
         try:
 
+            if key in ["panel_data", ""]:
+                if not block:
+                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
+                block = block.lower()
+
             if key == "panel_data":
-                params = [
-                    "air_supply_pressure_201", "air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401",
-                    "air_supply_humidity_201", "air_supply_humidity_202", "air_supply_humidity_203", "air_supply_humidity_301", "air_supply_humidity_401",
-                    "air_supply_temperature_201", "air_supply_temperature_202", "air_supply_temperature_203", "air_supply_temperature_301", "air_supply_temperature_401"
-                ]
+
+                if block == "mau":
+                    params = ["air_supply_pressure", "air_supply_humidity", "air_supply_temperature"]
+                    nums = ["201", "202", "203", "301", "401"]
+
+                else:
+                    params = ["air_supply_pressure", "return_air_humidity", "return_air_temperature"]
+                    nums = ["101", "102", "103", "104", "105", "106", "108", "109", "110", "201", "202", "203",  "204",
+                            "205", "206", "207-1", "207-2", "207-3", "207-4", "207-5", "207-6", "207-7", "207-8", "209",
+                            "301", "302", "303", "401", "402-1", "402-2", "402-3", "402-4"]
+
+                params = [f"{block}_{param}_{num}" for param in params for num in nums]
                 df = get_common_df(params, db, start, end, time_index, engine)
                 df = df.round(2)
                 data.update(
                     {
-                        "max_temperature": "{} ℃".format(df.loc[:, ["air_supply_temperature_201", "air_supply_temperature_202", "air_supply_temperature_203", "air_supply_temperature_301", "air_supply_temperature_401"]].max().values.max()),
-                        "max_humidity": "{} %".format(df.loc[:, ["air_supply_humidity_201", "air_supply_humidity_202", "air_supply_humidity_203", "air_supply_humidity_301", "air_supply_humidity_401"]].max().values.max()),
-                        "max_pressure": "{} Pa".format(df.loc[:, ["air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401"]].max().values.max())
+                        "max_temperature": "{} ℃".format(df.loc[:, [item for item in df.columns if "temperature" in item]].max().values.max()),
+                        "max_humidity": "{} %".format(df.loc[:, [item for item in df.columns if "humidity" in item]].max().values.max()),
+                        "max_pressure": "{} Pa".format(df.loc[:, [item for item in df.columns if "pressure" in item]].max().values.max())
                     }
                 )
             elif key == "mau_fan_frequency":
@@ -136,7 +149,6 @@ class TianjinView(APIView):
                 params = ["air_temperature", "air_humidity"]
                 df = get_common_df(params, db, start, end, time_index, engine)
                 data.update(get_common_response(df, by))
-
             elif key == "mau_data_with_temp":
                 params = ["air_temperature"]
                 item = request.data.get("item")

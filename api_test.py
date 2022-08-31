@@ -187,8 +187,10 @@ res = test_api(block, get_params_data(block, {"key": "solar_side_replenishment",
 
 # *********************************************** 测试 /tianjin 接口 START ***********************************************
 block = "tianjin"
+
+# MAU 数据板块
 # 1. 面板数据
-# res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+res = test_api(block, get_params_data(block, {"key": "panel_data", "block": "MAU"}))
 
 # 1. MAU风机频率
 # res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
@@ -242,7 +244,7 @@ block = "tianjin"
 
 
 # *********************************************** 测试 /custom 接口 START ***********************************************
-block = "custom"
+# block = "custom"
 # res = test_api(block, get_params_data(block, {"key": "config_file"}), False)
 
 # res = test_api(
