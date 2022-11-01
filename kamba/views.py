@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_404_NOT_FOUND
 from sqlalchemy import create_engine
 import pandas as pd
+import math
 import numpy as np
 from data_center.settings import DATABASE
 from data_center.tools import get_common_response, get_last_time_range, get_correspondence_with_temp_chart_response, \
@@ -147,6 +148,17 @@ class KambaView(APIView):
                 df = get_common_df(["solar_collector"], db, start, end, time_index, engine)
 
                 data.update(get_common_response(df, by))
+            elif key == "solar_radiation":
+                df = get_common_df(["solar_radiation"], db, start, end, time_index, engine)
+
+                data.update(get_common_response(df, by))
+
+            elif key == "solar_collector_efficiency":
+                df = get_common_df(["heat_collection_efficiency"], db, start, end, time_index, engine)
+                df["heat_collection_efficiency"] = df["heat_collection_efficiency"] * 100
+                df["heat_collection_efficiency"] = df["heat_collection_efficiency"].apply(np.floor)
+                data.update(get_common_response(df, by))
+
             elif key == "solar_matrix_water_temperature":
                 params = ["time_data", "solar_matrix_supply_water_temp", "solar_matrix_return_water_temp"]
                 df = get_common_df(params, db, start, end, time_index, engine)
@@ -269,6 +281,7 @@ class KambaView(APIView):
                 params = ["co2_emission_reduction", "co2_equal_num"]
                 df = get_common_df(params, db, start, end, time_index, engine)
                 data.update(get_common_response(df, by))
+            # elif key == ""
 
         except Exception as e:
             # print("异常", e)
