@@ -87,24 +87,44 @@ def get_custom_response(df, by, chart_type, x_data):
     return res
 
 
-def get_common_sql(params, db, start, end, time_key):
-    common_sql = "select * from {} where pointname in {} and '{}' bewteen '{}' and '{}'".format(
-        db, tuple(params), time_key, start, end
-    )
+def abnormal_data_handling(df, params):
 
-    return common_sql.format(",".join(params), db, time_key, start, end)
+    if "heat_supply" in df.columns:
+        conformity_cols = [col for col in df.columns if col in [
+            "cop", "wshp_cop", "max_load", "min_load", "avg_load", "high_temperature_plate_exchange_heat",
+            "high_temperature_plate_exchange_heat_rate", "wshp_heat", "heating_guarantee_rate", "heat_supply_rate",
+            "wshp_power_consume_bk", "cost_saving", "power_consumption", "wshp_power_consume",
+            "co2_emission_reduction", "co2_equal_num"
+        ]
+                           ]
+
+        df.loc[df["heat_supply"] < 500, conformity_cols] = 0
+        if "heat_supply" not in params:
+            return df.loc[:, params]
+    return df
 
 
-def get_common_df(params, db, start, end, time_key, engine):
-    if len(params) > 1:
-        common_sql = "select * from {} where pointname in {} and {} between '{}' and '{}'".format(
-            db, tuple(params), time_key, start, end
+def get_common_sql(params, db, start, end, time_key, deal=True):
+    q_params = params
+
+    if deal:
+        if "heat_supply" not in params:
+            q_params = params + ["heat_supply"]
+
+    if len(q_params) == 1:
+        common_sql = "select * from {} where pointname = '{}' and {} between '{}' and '{}'".format(
+            db, q_params[0], time_key, start, end
         )
     else:
-        common_sql = "select * from {} where pointname = '{}' and {} between '{}' and '{}'".format(
-            db, params[0], time_key, start, end
+        common_sql = "select * from {} where pointname in {} and {} between '{}' and '{}'".format(
+            db, tuple(q_params), time_key, start, end
         )
-    df = pd.read_sql(common_sql, con=engine)
+    return common_sql
+
+
+def get_common_df(params, db, start, end, time_key, engine, deal=True):
+    sql = get_common_sql(params, db, start, end, time_key, deal)
+    df = pd.read_sql(sql, con=engine)
     return df.pivot(index=time_key, columns="pointname", values="value")
 
 

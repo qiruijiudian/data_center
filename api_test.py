@@ -111,8 +111,42 @@ block = "cona"
 # *********************************************** 测试 /kamba 接口 START **************************************************
 block = "kamba"
 # 1. 面板数据
-# res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+print(res)
+start, end = '2022/10/24 00:00:00' , '2022/10/30 23:59:59'
 
+
+# for item in [
+# # "panel_data",
+# # "heat_storage_tank_heating",
+# # "alternative_heating_days",
+# # "com_cop",
+# # "wshp_cop",
+# # "pool_temperature_heatmap",
+# # "solar_collector",
+# # "solar_radiation",
+# # "solar_collector_efficiency",
+# # "solar_matrix_water_temperature",
+# # "load",
+# # "end_water_supply_with_temp",
+# # "end_water_return_with_temp",
+# # "end_water_diff_with_temp",
+# # "end_water_temperature_compare",
+# # "solar_collector_analysis",
+# # "heating_analysis",
+# # "heat_production",
+# "high_temperature_plate_exchange_heat_rate",
+# # "cost_saving",
+# # "end_water_temperature",
+# # "heat_storage_tank_replenishment",
+# # "heat_replenishment",
+# # "solar_side_replenishment",
+# # "emission_reduction",
+# # "co2_equal_data",
+# ]:
+#     print(item, test_api(block, get_params_data(block, {"key": item, "by": "d", "start": start, "end": end})))
+# res = test_api(block, get_params_data(block, {"key": "wshp_cop", "by": "d", "start": start, "end": end}))
+res = None
 # 2. 蓄热水池高低温热量
 # res = test_api(block, get_params_data(block, {"key": "heat_storage_tank_heating", "by": "d"}))
 
@@ -141,7 +175,7 @@ block = "kamba"
 # res = test_api(block, get_params_data(block, {"key": "heat_replenishment", "by": "h"}))
 
 # 9. 太阳能测补水量
-res = test_api(block, get_params_data(block, {"key": "solar_side_replenishment", "by": "h"}))
+# res = test_api(block, get_params_data(block, {"key": "solar_side_replenishment", "by": "h"}))
 
 # 10. 负荷量
 # res = test_api(block, get_params_data(block, {"key": "load", "by": "d"}))
@@ -167,6 +201,7 @@ res = test_api(block, get_params_data(block, {"key": "solar_side_replenishment",
 
 # 17. 供热分析
 # res = test_api(block, get_params_data(block, {"key": "heating_analysis", "by": "d"}))
+# res = test_api(block, get_params_data(block, {"key": "emission_reduction", "by": "d"}))
 
 # 18. 供热量情况
 # res = test_api(block, get_params_data(block, {"key": "heat_production", "by": "d"}))
@@ -190,7 +225,7 @@ block = "tianjin"
 
 # MAU 数据板块
 # 1. 面板数据
-res = test_api(block, get_params_data(block, {"key": "panel_data", "block": "MAU"}))
+# res = test_api(block, get_params_data(block, {"key": "panel_data", "block": "MAU"}))
 
 # 1. MAU风机频率
 # res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))

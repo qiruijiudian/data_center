@@ -7,7 +7,7 @@ import math
 import numpy as np
 from data_center.settings import DATABASE
 from data_center.tools import get_common_response, get_last_time_range, get_correspondence_with_temp_chart_response, \
-    get_common_sql, get_last_time_by_delta, get_common_df
+    get_common_sql, get_last_time_by_delta, get_common_df, abnormal_data_handling
 import platform
 
 
@@ -39,26 +39,22 @@ class KambaView(APIView):
                 )
         )
         try:
-            if key == "geothermal_wells_provide_heat":
-                params = ["time_data", "high_temp_plate_exchange_heat_production", "water_heat_pump_heat_production",
-                          "geothermal_wells_high_heat_provide", "geothermal_wells_low_heat_provide"]
-                df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-                data.update(get_common_response(df, by))
-            elif key == "panel_data":
+            # if key == "geothermal_wells_provide_heat":
+            #     params = ["time_data", "high_temp_plate_exchange_heat_production", "water_heat_pump_heat_production",
+            #               "geothermal_wells_high_heat_provide", "geothermal_wells_low_heat_provide"]
+            #     df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
+            #     data.update(get_common_response(df, by))
+            if key == "panel_data":
                 params, db = ["max_load", "min_load", "cost_saving"], "kamba_days_data"
                 df = get_common_df(params, db, start, end, time_index, engine)
-                # TODO 小于0异常值处理
-                for param in params:
-                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
+                df = abnormal_data_handling(df, params)
+
                 cost_saving_sum = df["cost_saving"].sum()
                 cs_sum = cost_saving_sum / 10000
-                if cs_sum >= 1:
-                    if cs_sum > 10:
-                        cost_saving_sum = "{} 万元".format(round(cs_sum))
-                    else:
-                        cost_saving_sum = "{} 万元".format(round(cs_sum, 1))
+                if cs_sum >= 10:
+                    cost_saving_sum = "{} 万元".format(np.floor(cs_sum))
                 else:
-                    cost_saving_sum = "{} 元".format(round(cost_saving_sum, 2))
+                    cost_saving_sum = "{} 元".format(int(np.floor(cost_saving_sum)))
 
                 data.update(
                     {
@@ -70,24 +66,26 @@ class KambaView(APIView):
 
             elif key == "heat_storage_tank_heating":
                 params = ["high_heat_of_storage", "low_heat_of_storage"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
                 data.update(get_common_response(df, by))
             elif key == "alternative_heating_days":
                 params = ["high_heat_of_storage", "heat_supply_days"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
                 data.update(get_common_response(df, by))
             elif key == "com_cop":
                 df = get_common_df(["cop"], db, start, end, time_index, engine)
+                df = abnormal_data_handling(df, ["cop"])
                 df["Target Minimum"] = 6
                 df["Low Threshold"] = 4
                 data.update(get_common_response(df, by))
                 data["status"] = "数据异常" if ("" in df["cop"].values or None in df["cop"].values) else "正常"
             elif key == "wshp_cop":
                 df = get_common_df(["wshp_cop"], db, start, end, time_index, engine)
+                df = abnormal_data_handling(df, ["wshp_cop"])
                 df["Target Minimum"] = 6
                 df["Low Threshold"] = 4
                 data.update(get_common_response(df, by))
-                data["status"] = "数据异常" if ("" in df["wshp_cop"].values or None in df["wshp_cop"].values) else "正常"
+                data["status"] = "数据异常" if (("" in df["wshp_cop"].values) or (None in df["wshp_cop"].values)) else "正常"
             elif key == "pool_temperature_heatmap":
                 db = "kamba_hours_pool_temperature"
                 if not end:
@@ -102,7 +100,7 @@ class KambaView(APIView):
                           '5.4', '5.73', '6.06', '6.39', '6.72', '7.05', '7.38', '7.71', '8.04', '8.37', '8.7', '9.03',
                           '9.36']
 
-                df = get_common_df(params, db, start, end, "Timestamp", engine)
+                df = get_common_df(params, db, start, end, "Timestamp", engine, False)
 
                 df = df.round(2).fillna("")
                 res = {"0-4": {},  "4-8": {},  "8-12": {},  "12-16": {}, "16-20": {}, "20-24": {}}
@@ -145,48 +143,47 @@ class KambaView(APIView):
                 data["time"] = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"]
 
             elif key == "solar_collector":
-                df = get_common_df(["solar_collector"], db, start, end, time_index, engine)
+                df = get_common_df(["solar_collector"], db, start, end, time_index, engine, False)
+
 
                 data.update(get_common_response(df, by))
             elif key == "solar_radiation":
-                df = get_common_df(["solar_radiation"], db, start, end, time_index, engine)
+                df = get_common_df(["solar_radiation"], db, start, end, time_index, engine, False)
 
                 data.update(get_common_response(df, by))
 
             elif key == "solar_collector_efficiency":
-                df = get_common_df(["heat_collection_efficiency"], db, start, end, time_index, engine)
+                df = get_common_df(["heat_collection_efficiency"], db, start, end, time_index, engine, False)
                 df["heat_collection_efficiency"] = df["heat_collection_efficiency"] * 100
                 df["heat_collection_efficiency"] = df["heat_collection_efficiency"].apply(np.floor)
                 data.update(get_common_response(df, by))
 
             elif key == "solar_matrix_water_temperature":
                 params = ["time_data", "solar_matrix_supply_water_temp", "solar_matrix_return_water_temp"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
 
                 data.update(get_common_response(df, by))
             elif key == "load":
                 params = ["max_load", "min_load", "avg_load"]
                 df = get_common_df(params, db, start, end, time_index, engine)
-                # TODO 小于0异常值处理
-                for param in params:
-                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
+                df = abnormal_data_handling(df, params)
 
                 data.update(get_common_response(df, by))
             elif key == "end_water_supply_with_temp":
                 params = ["end_supply_water_temp", "temp"]
 
                 time_range = get_last_time_range(start, end)
-                df = get_common_df(params, db, start, end, time_index, engine)
-                last_df = get_common_df(params, db, time_range["last_start"], time_range["last_end"], time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
+                last_df = get_common_df(params, db, time_range["last_start"], time_range["last_end"], time_index, engine, False)
 
                 data.update(get_correspondence_with_temp_chart_response(df, last_df, time_range, "end_supply_water_temp"))
             elif key == "end_water_return_with_temp":
                 params = ["end_return_water_temp", "temp"]
 
                 time_range = get_last_time_range(start, end)
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
                 last_df = get_common_df(params, db, time_range["last_start"], time_range["last_end"], time_index,
-                                        engine)
+                                        engine, False)
 
                 data.update(
                     get_correspondence_with_temp_chart_response(df, last_df, time_range, "end_return_water_temp"))
@@ -194,18 +191,18 @@ class KambaView(APIView):
                 params = ["time_data", "end_return_water_temp_diff", "temp"]
 
                 time_range = get_last_time_range(start, end)
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
                 last_df = get_common_df(params, db, time_range["last_start"], time_range["last_end"], time_index,
-                                        engine)
+                                        engine, False)
 
                 data.update(
                     get_correspondence_with_temp_chart_response(df, last_df, time_range, "end_return_water_temp_diff"))
             elif key == "end_water_temperature_compare":
                 params = ["end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff", "temp"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
 
                 last_time = get_last_time_by_delta(start, "-", 1, "y")
-                last_df = get_common_df(params, db, last_time["start"], last_time["end"], time_index, engine)
+                last_df = get_common_df(params, db, last_time["start"], last_time["end"], time_index, engine, False)
 
                 df, last_df = df.round(2).fillna(""), last_df.round(2).fillna("")
                 temp, last_temp = df["temp"].values, last_df["temp"].values
@@ -221,72 +218,67 @@ class KambaView(APIView):
                     return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
 
                 df = get_common_df(["heat_supply", "solar_collector", "heating_guarantee_rate"], db, start, end, time_index, engine)
-                df["heating_guarantee_rate"] = df["heating_guarantee_rate"] * 100
+                df = abnormal_data_handling(df, ["heat_supply", "solar_collector", "heating_guarantee_rate"])
 
-                # TODO 小于0异常值处理
-                for param in ["heat_supply", "solar_collector", "heating_guarantee_rate"]:
-                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
+                df["heating_guarantee_rate"] = np.floor(df["heating_guarantee_rate"] * 100)
 
                 data.update(get_common_response(df, time_index, by))
             elif key == "heating_analysis":
                 params = ["high_temperature_plate_exchange_heat", "wshp_heat"]
                 df = get_common_df(params, db, start, end, time_index, engine)
-                # TODO 小于0异常值处理
-                for param in params:
-                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
+                df = abnormal_data_handling(df, params)
 
                 data.update(get_common_response(df, by))
             elif key == "heat_production":
-                params = ["heat_supply", "power_consume", "heat_supply_rate"]
+                params = ["heat_supply", "wshp_power_consume", "heat_supply_rate"]
                 df = get_common_df(params, db, start, end, time_index, engine)
-                df["heat_supply_rate"] = df["heat_supply_rate"] * 100
-                # TODO 小于0异常值处理
-                for param in params:
-                    df[param] = df[param].apply(lambda x: x if x >= 0 else 0)
+                df["heat_supply_rate"] = np.floor(df["heat_supply_rate"] * 100)
+                df = abnormal_data_handling(df, params)
                 data.update(get_common_response(df, by))
             elif key == "high_temperature_plate_exchange_heat_rate":
-                if by == "d":
-                    return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
                 params = ["high_temperature_plate_exchange_heat_rate"]
                 df = get_common_df(params, db, start, end, time_index, engine)
+                df = abnormal_data_handling(df, params)
                 data.update(get_common_response(df, by))
             elif key == "cost_saving":
                 params = ["cost_saving", "power_consumption"]
                 df = get_common_df(params, db, start, end, time_index, engine)
-                # TODO 异常值 < 0
-                df["cost_saving"] = df["cost_saving"].apply(lambda x: x if x >= 0 else 0)
+                df = abnormal_data_handling(df, params)
                 data.update(get_common_response(df, by))
             elif key == "end_water_temperature":
                 params = ["end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
                 data.update(get_common_response(df, by))
             elif key == "heat_storage_tank_replenishment":
-                df = get_common_df(["heat_storage_tank_replenishment"], db, start, end, time_index, engine)
+                df = get_common_df(["heat_storage_tank_replenishment"], db, start, end, time_index, engine, False)
                 data.update(get_common_response(df, by))
             elif key == "heat_replenishment":
                 params = ["heat_water_replenishment", "heat_water_replenishment_limit"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
                 data.update(get_common_response(df, by))
             elif key == "solar_side_replenishment":
                 params = ["solar_side_replenishment", "solar_side_replenishment_limit"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, time_index, engine, False)
                 data.update(get_common_response(df, by))
             elif key == "emission_reduction":
-                params = ["co2_emission_reduction", "co2_power_consume"]
+                params = ["co2_emission_reduction", "power_consumption"]
                 df = get_common_df(params, db, start, end, time_index, engine)
+                df = abnormal_data_handling(df, params)
                 df["co2_emission_reduction"] = df["co2_emission_reduction"].cumsum()
-                df["co2_power_consume"] = df["co2_power_consume"].cumsum()
+                df["power_consumption"] = df["power_consumption"].cumsum()
+
                 data.update(get_common_response(df, by))
             elif key == "co2_equal_data":
                 params = ["co2_emission_reduction", "co2_equal_num"]
                 df = get_common_df(params, db, start, end, time_index, engine)
+                df = abnormal_data_handling(df, params)
                 data.update(get_common_response(df, by))
             # elif key == ""
 
         except Exception as e:
             # print("异常", e)
-            # import traceback
-            # traceback.print_exc()
+            import traceback
+            traceback.print_exc()
             engine.dispose()
         finally:
             engine.dispose()
