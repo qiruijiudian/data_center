@@ -193,6 +193,9 @@ class TianjinView(APIView):
                     "air_supply_temperature_{}"]
                           ]
                 df = get_common_df(params, db, start, end, time_index, engine)
+                for column in df.columns:
+                    if "fan_frequency" in column:
+                        df[column] = np.floor(df[column] * 100)
                 data.update(get_common_response(df, by))
 
         except Exception as e:
