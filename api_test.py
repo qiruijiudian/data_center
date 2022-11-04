@@ -51,8 +51,8 @@ def test_api(u_type, data, is_local=True):
 
 # ********************************************** 测试 /common 接口 START ************************************************
 # 1. 账号密码登录
-# res = test_api("common", {"u_name": "tianjin", "pwd": "123456", "key": "login"})
-
+res = test_api("common", {"u_name": "tianjin", "pwd": "123456", "key": "login"})
+print(res)
 # 2. token验证
 # res = test_api("common", {"token": "fea2700a631cb000e5b244b8112ee43560e5b67e3b8723f8c83fcc90fb9545b8", "key": "token_check", "block": "tianjin"})
 
@@ -111,9 +111,9 @@ block = "cona"
 # *********************************************** 测试 /kamba 接口 START **************************************************
 block = "kamba"
 # 1. 面板数据
-res = test_api(block, get_params_data(block, {"key": "panel_data"}))
-print(res)
-start, end = '2022/10/24 00:00:00' , '2022/10/30 23:59:59'
+# res = test_api(block, get_params_data(block, {"key": "panel_data"}), False)
+# print(res)
+# start, end = '2022/10/24 00:00:00' , '2022/10/30 23:59:59'
 
 
 # for item in [
