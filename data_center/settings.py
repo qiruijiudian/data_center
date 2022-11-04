@@ -48,10 +48,21 @@ INSTALLED_APPS = [
     'customized_chart',
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE_CLASSES = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -61,6 +72,7 @@ MIDDLEWARE = [
 
 CORS_ALLOW_CREDENTIALS = True   #允许携带cookie
 # CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ALLOWED_ORIGINS
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ORIGIN_WHITELIST = ('*')  #跨域增加忽略
 CORS_ALLOW_METHODS = ('DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'VIEW', )
