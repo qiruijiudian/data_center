@@ -50,19 +50,18 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 CORS_ALLOW_CREDENTIALS = True   #允许携带cookie
 CORS_ORIGIN_ALLOW_ALL = True
-# CORS_ORIGIN_WHITELIST = ( '*')  #跨域增加忽略
+CORS_ORIGIN_WHITELIST = ('*')  #跨域增加忽略
 CORS_ALLOW_METHODS = ('DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'VIEW', )
 
 #允许的请求头
@@ -79,6 +78,8 @@ CORS_ALLOW_HEADERS = (
     'x-requested-with',
     'Pragma',
  )
+
+
 APPEND_SLASH = False
 # APPEND_SLASH
 ROOT_URLCONF = 'data_center.urls'
