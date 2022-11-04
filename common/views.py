@@ -16,6 +16,12 @@ class CommonView(APIView):
         data = {}
         key = request.data.get("key")
 
+        header = {
+            "Access-Control-Allow-Origin" : "*",
+            "Access-Control-Allow-Methods" : "POST, GET, OPTIONS",
+            "Access-Control-Allow-Headers" : "*"
+        }
+
         if not key:
             return Response({'msg': 'params error'}, status=HTTP_404_NOT_FOUND)
 
@@ -98,7 +104,7 @@ class CommonView(APIView):
             if data:
                 return data
             else:
-                return Response({"msg": "data error"}, status=HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response({"msg": "data error"}, status=HTTP_500_INTERNAL_SERVER_ERROR, headers=header)
 
     def get(self):
         return Response({"msg": "OK"}, status=HTTP_200_OK)

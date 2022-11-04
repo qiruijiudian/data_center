@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-# from corsheaders.defaults import default_methods
+from corsheaders.defaults import default_methods
 from corsheaders.defaults import default_headers
 
 from pathlib import Path
@@ -52,12 +52,10 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -66,24 +64,14 @@ MIDDLEWARE = [
 CORS_ALLOW_CREDENTIALS = True   #允许携带cookie
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_ALL_ORIGINS = True
-# CORS_ALLOWED_ORIGINS
-# CORS_ALLOW_ALL_ORIGINS = True
 # CORS_ORIGIN_WHITELIST = ('*')  #跨域增加忽略
-CORS_ALLOW_METHODS = ('DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'VIEW', )
-
-
+CORS_ALLOW_METHODS = default_methods
 
 
 #允许的请求头
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    'XMLHttpRequest',
-    'X_FILENAME',
-    'Pragma',
-]
-
+CORS_ALLOW_HEADERS = list(default_headers) + ['XMLHttpRequest', 'X_FILENAME', 'Pragma']
 
 APPEND_SLASH = False
-# APPEND_SLASH
 ROOT_URLCONF = 'data_center.urls'
 
 TEMPLATES = [
