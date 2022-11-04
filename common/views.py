@@ -100,6 +100,9 @@ class CommonView(APIView):
             else:
                 return Response({"msg": "data error"}, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def get(self):
+        return Response({"msg": "OK"}, status=HTTP_200_OK)
+
 
 
 
