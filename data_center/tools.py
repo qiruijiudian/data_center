@@ -87,6 +87,23 @@ def get_custom_response(df, by, chart_type, x_data):
     return res
 
 
+def is_day(df):
+    if len(df) > 1:
+        start, end = 0, 1
+        times = pd.to_datetime(df.index)
+        delta = times[end] - times[start]
+        while delta.days != 1:
+            if delta.days < 1:
+                return False
+            start += 1
+            end += 1
+        return True
+
+    else:
+        value = pd.to_datetime(df.index[0])
+
+        return value.hour == value.minute == 0
+
 def abnormal_data_handling(df, params):
 
     if "heat_supply" in df.columns:
@@ -101,6 +118,13 @@ def abnormal_data_handling(df, params):
         df.loc[df["heat_supply"] < 500, conformity_cols] = 0
         if "heat_supply" not in params:
             return df.loc[:, params]
+
+    if "WSHP_HeatLoad" in df.columns:
+        if is_day(df):
+
+            df["WSHP_HeatLoad"][df["WSHP_HeatLoad"] < 43200] = 0
+        else:
+            df["WSHP_HeatLoad"][df["WSHP_HeatLoad"] < 1800] = 0
     return df
 
 
