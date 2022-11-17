@@ -69,7 +69,7 @@ class TianjinView(APIView):
                     }
                 )
             elif key == "mau_fan_frequency":
-                params = ["fan_frequency_201", "fan_frequency_202", "fan_frequency_203", "fan_frequency_301", "fan_frequency_401"]
+                params = ["mau_fan_frequency_201", "mau_fan_frequency_202", "mau_fan_frequency_203", "mau_fan_frequency_301", "mau_fan_frequency_401"]
                 df = get_common_df(params, db, start, end, time_index, engine)
                 for column in params:
                     df[column] = df[column] * 100
@@ -153,11 +153,11 @@ class TianjinView(APIView):
                 params = ["air_temperature"]
                 item = request.data.get("item")
                 if item == "sat":
-                    params.extend(["air_supply_temperature_201", "air_supply_temperature_202", "air_supply_temperature_203", "air_supply_temperature_301", "air_supply_temperature_401"])
+                    params.extend(["mau_air_supply_temperature_201", "mau_air_supply_temperature_202", "mau_air_supply_temperature_203", "mau_air_supply_temperature_301", "mau_air_supply_temperature_401"])
                 elif item == "sap":
-                    params.extend(["air_supply_pressure_201", "air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401"])
+                    params.extend(["mau_air_supply_pressure_201", "mau_air_supply_pressure_202", "mau_air_supply_pressure_203", "mau_air_supply_pressure_301", "mau_air_supply_pressure_401"])
                 elif item == "sah":
-                    params.extend(["air_supply_humidity_201", "air_supply_humidity_202", "air_supply_humidity_203", "air_supply_humidity_301", "air_supply_humidity_401"])
+                    params.extend(["mau_air_supply_humidity_201", "mau_air_supply_humidity_202", "mau_air_supply_humidity_203", "mau_air_supply_humidity_301", "mau_air_supply_humidity_401"])
 
                 df = get_common_df(params, db, start, end, time_index, engine)
                 if item == "sat":
@@ -189,8 +189,8 @@ class TianjinView(APIView):
                 if not item_id:
                     return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
                 params = [item.format(item_id) for item in [
-                    "fan_frequency_{}", "cold_water_valve_{}", "hot_water_valve_{}", "air_supply_humidity_{}",
-                    "air_supply_temperature_{}"]
+                    "mau_fan_frequency_{}", "mau_cold_water_valve_{}", "mau_hot_water_valve_{}", "mau_air_supply_humidity_{}",
+                    "mau_air_supply_temperature_{}"]
                           ]
                 df = get_common_df(params, db, start, end, time_index, engine)
                 for column in df.columns:

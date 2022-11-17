@@ -49,10 +49,12 @@ def test_api(u_type, data, is_local=True):
     r = requests.post(url, data=data)
     return r.text
 
+
+
 # ********************************************** 测试 /common 接口 START ************************************************
 # 1. 账号密码登录
-res = test_api("common", {"u_name": "tianjin", "pwd": "123456", "key": "login"})
-print(res)
+# res = test_api("common", {"u_name": "tianjin", "pwd": "123456", "key": "login"})
+# print(res)
 # 2. token验证
 # res = test_api("common", {"token": "fea2700a631cb000e5b244b8112ee43560e5b67e3b8723f8c83fcc90fb9545b8", "key": "token_check", "block": "tianjin"})
 
@@ -229,6 +231,7 @@ block = "tianjin"
 
 # 1. MAU风机频率
 # res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
+res = test_api(block, get_params_data(block, {"key": "mau_data_with_temp", "item": "sah"}))
 
 # 2. MAU冷热水阀开度201
 # res = test_api(block, get_params_data(block, {"key": "mau_water_valve_201"}))
