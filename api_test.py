@@ -231,7 +231,7 @@ block = "tianjin"
 
 # 1. MAU风机频率
 # res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
-res = test_api(block, get_params_data(block, {"key": "mau_data_with_temp", "item": "sah"}))
+res = test_api(block, get_params_data(block, {"key": "air_temperature_and_humidity"}))
 
 # 2. MAU冷热水阀开度201
 # res = test_api(block, get_params_data(block, {"key": "mau_water_valve_201"}))

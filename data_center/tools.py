@@ -8,6 +8,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 import pymysql
 import platform
+
+from sqlalchemy import create_engine
+
 from data_center.settings import DATABASE
 import operator
 
@@ -367,3 +370,45 @@ def check_custom_file(file):
         elif "scatter" not in ctype and c_xname != "日期":
             return False, x_name_error
     return True, "验证通过"
+
+
+def get_box_data(start, end):
+    # 暂时使用 之后重置数据库更新内容
+    engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
+        "root",
+        "cdqr2008",
+        "121.199.48.82",
+        "data_center_original"
+    )
+    )
+
+    try:
+
+        sql = f"""select * from kamba where pointname in ('SolarPT1_SEHCM01', 'SolarPT2_SEHCM01', 'SolarPT3_SEHCM01', 
+                'SolarPT4_SEHCM01', 'SolarPT5_SEHCM01', 'SolarPT1_SEHCM02', 'SolarPT2_SEHCM02', 'SolarPT3_SEHCM02', 
+                'SolarPT4_SEHCM02', 'SolarPT5_SEHCM02', 'SolarPT1_SEHCM03', 'SolarPT2_SEHCM03', 'SolarPT3_SEHCM03', 
+                'SolarPT4_SEHCM03', 'SolarPT5_SEHCM03', 'SolarPT1_SEHCM04', 'SolarPT2_SEHCM04', 'SolarPT3_SEHCM04', 
+                'SolarPT4_SEHCM04', 'SolarPT5_SEHCM04', 'SolarPT1_SEHCM05', 'SolarPT2_SEHCM05', 'SolarPT3_SEHCM05', 
+                'SolarPT4_SEHCM05', 'SolarPT5_SEHCM05', 'SolarPT1_SEHCM06', 'SolarPT2_SEHCM06', 'SolarPT3_SEHCM06', 
+                'SolarPT4_SEHCM06', 'SolarPT5_SEHCM06', 'SolarPT1_SEHCM07', 'SolarPT2_SEHCM07', 'SolarPT3_SEHCM07', 
+                'SolarPT4_SEHCM07', 'SolarPT5_SEHCM07', 'SolarPT1_SEHCM08', 'SolarPT2_SEHCM08', 'SolarPT3_SEHCM08', 
+                'SolarPT4_SEHCM08', 'SolarPT5_SEHCM08') and Timestamp between '{start}' and '{end}'"""
+
+        result_df = pd.read_sql(sql, con=engine).pivot(index='Timestamp', columns='pointname', values='value')
+        res = pd.Series(dtype="float64")
+        if "Timestamp" in result_df.index:
+            result_df = result_df.set_index("Timestamp")
+
+        for column in result_df.columns:
+            res = res.append(result_df[column])
+        res_df = pd.DataFrame({"Timestamp": res.index, "value": res.values}).set_index("Timestamp")
+        res_df = res_df.resample("h")
+        x, y = [], []
+        for k, v in res_df:
+            x.append(k.strftime("%Y/%m/%d %H:%M"))
+            y.append(v["value"].tolist())
+        return x, y
+
+    finally:
+
+        engine.dispose()

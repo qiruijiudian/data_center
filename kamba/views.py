@@ -7,7 +7,7 @@ import math
 import numpy as np
 from data_center.settings import DATABASE
 from data_center.tools import get_common_response, get_last_time_range, get_correspondence_with_temp_chart_response, \
-    get_common_sql, get_last_time_by_delta, get_common_df, abnormal_data_handling
+    get_common_sql, get_last_time_by_delta, get_common_df, abnormal_data_handling, get_box_data
 import platform
 
 
@@ -273,7 +273,12 @@ class KambaView(APIView):
                 df = get_common_df(params, db, start, end, time_index, engine)
                 df = abnormal_data_handling(df, params)
                 data.update(get_common_response(df, by))
-            # elif key == ""
+            elif key == "box_data":
+                x, y = get_box_data(start, end)
+                data["time_data"] = x
+                data["box_data"] = y
+                data["start"] = start.split(" ")[0]
+                data["end"] = end.split(" ")[0]
 
         except Exception as e:
             # print("异常", e)

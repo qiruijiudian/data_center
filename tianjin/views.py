@@ -71,8 +71,8 @@ class TianjinView(APIView):
             elif key == "mau_fan_frequency":
                 params = ["mau_fan_frequency_201", "mau_fan_frequency_202", "mau_fan_frequency_203", "mau_fan_frequency_301", "mau_fan_frequency_401"]
                 df = get_common_df(params, db, start, end, time_index, engine)
-                for column in params:
-                    df[column] = df[column] * 100
+                # for column in params:
+                #     df[column] = df[column] * 100
                 data.update(get_common_response(df, time_index, by))
             elif key == "mau_water_valve_201":
                 params = ["time_data", "cold_water_valve_201", "hot_water_valve_201"]
@@ -193,9 +193,9 @@ class TianjinView(APIView):
                     "mau_air_supply_temperature_{}"]
                           ]
                 df = get_common_df(params, db, start, end, time_index, engine)
-                for column in df.columns:
-                    if "fan_frequency" in column:
-                        df[column] = np.floor(df[column] * 100)
+                # for column in df.columns:
+                #     if "fan_frequency" in column:
+                #         df[column] = np.floor(df[column] * 100)
                 data.update(get_common_response(df, by))
 
         except Exception as e:
