@@ -226,6 +226,11 @@ class KambaView(APIView):
             elif key == "heating_analysis":
                 params = ["high_temperature_plate_exchange_heat", "wshp_heat"]
                 df = get_common_df(params, db, start, end, time_index, engine)
+                print(df)
+
+                # TODO 临时处理
+                # df["wshp_heat"] = df["wshp_heat"].mask(df["wshp_heat"] >= 0, 0)
+                df.loc[df["wshp_heat"]<0, "wshp_heat"] = 0
                 df = abnormal_data_handling(df, params)
 
                 data.update(get_common_response(df, by))

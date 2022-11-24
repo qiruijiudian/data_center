@@ -150,7 +150,7 @@ block = "kamba"
 # res = test_api(block, get_params_data(block, {"key": "wshp_cop", "by": "d", "start": start, "end": end}))
 res = None
 # 2. 蓄热水池高低温热量
-# res = test_api(block, get_params_data(block, {"key": "heat_storage_tank_heating", "by": "d"}))
+res = test_api(block, get_params_data(block, {"key": "heating_analysis", "by": "d"}))
 
 # 3. 电锅炉可替换供热天数
 # res = test_api(block, get_params_data(block, {"key": "alternative_heating_days", "by": "d"}))
@@ -231,7 +231,7 @@ block = "tianjin"
 
 # 1. MAU风机频率
 # res = test_api(block, get_params_data(block, {"key": "mau_fan_frequency"}))
-res = test_api(block, get_params_data(block, {"key": "air_temperature_and_humidity"}))
+# res = test_api(block, get_params_data(block, {"key": "air_temperature_and_humidity"}))
 
 # 2. MAU冷热水阀开度201
 # res = test_api(block, get_params_data(block, {"key": "mau_water_valve_201"}))
