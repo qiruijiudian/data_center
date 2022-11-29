@@ -377,7 +377,8 @@ def get_box_data(start, end):
     engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
         "root",
         "cdqr2008",
-        "121.199.48.82",
+        # "121.199.48.82",
+        "localhost",
         "data_center_original"
     )
     )
@@ -401,7 +402,10 @@ def get_box_data(start, end):
 
         for column in result_df.columns:
             res = res.append(result_df[column])
-        res_df = pd.DataFrame({"Timestamp": res.index, "value": res.values}).set_index("Timestamp")
+
+        res_df = pd.DataFrame({"Timestamp": res.index, "value": res.values})
+        res_df = res_df.set_index("Timestamp")
+        res_df = res_df.dropna(how="all")
         res_df = res_df.resample("h")
         x, y = [], []
         for k, v in res_df:

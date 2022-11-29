@@ -1,3 +1,5 @@
+import json
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_404_NOT_FOUND
@@ -280,6 +282,9 @@ class KambaView(APIView):
                 data.update(get_common_response(df, by))
             elif key == "box_data":
                 x, y = get_box_data(start, end)
+                with open("a.json", "w") as f:
+                    f.write(json.dumps(y))
+
                 data["time_data"] = x
                 data["box_data"] = y
                 data["start"] = start.split(" ")[0]

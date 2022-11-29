@@ -150,7 +150,8 @@ block = "kamba"
 # res = test_api(block, get_params_data(block, {"key": "wshp_cop", "by": "d", "start": start, "end": end}))
 res = None
 # 2. 蓄热水池高低温热量
-res = test_api(block, get_params_data(block, {"key": "heating_analysis", "by": "d"}))
+# res = test_api(block, get_params_data(block, {"key": "heating_analysis", "by": "d"}))
+res = test_api(block, get_params_data(block, {"key": "box_data", "by": "d"}))
 
 # 3. 电锅炉可替换供热天数
 # res = test_api(block, get_params_data(block, {"key": "alternative_heating_days", "by": "d"}))
