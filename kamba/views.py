@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,9 +8,9 @@ from sqlalchemy import create_engine
 import pandas as pd
 import math
 import numpy as np
-from data_center.settings import DATABASE
+from data_center.settings import DATABASE, START_DATE
 from data_center.tools import get_common_response, get_last_time_range, get_correspondence_with_temp_chart_response, \
-    get_common_sql, get_last_time_by_delta, get_common_df, abnormal_data_handling, get_box_data
+    get_common_sql, get_last_time_by_delta, get_common_df, abnormal_data_handling, get_box_data, get_latest_data
 import platform
 
 
@@ -40,29 +41,39 @@ class KambaView(APIView):
                     DATABASE[plate_form]["data"]["database"]
                 )
         )
+
         try:
-            # if key == "geothermal_wells_provide_heat":
-            #     params = ["time_data", "high_temp_plate_exchange_heat_production", "water_heat_pump_heat_production",
-            #               "geothermal_wells_high_heat_provide", "geothermal_wells_low_heat_provide"]
-            #     df = pd.read_sql(get_common_sql(params, db, start, end, time_index), con=engine)
-            #     data.update(get_common_response(df, by))
+
             if key == "panel_data":
-                params, db = ["max_load", "min_load", "cost_saving"], "kamba_days_data"
+                params, db = ["avg_load", "co2_emission_reduction", "cost_saving"], "kamba_days_data"
+                end = get_latest_data(engine, db)
+                start = START_DATE["kamba"]
                 df = get_common_df(params, db, start, end, time_index, engine)
                 df = abnormal_data_handling(df, params)
 
-                cost_saving_sum = df["cost_saving"].sum()
-                cs_sum = cost_saving_sum / 10000
-                if cs_sum >= 10:
-                    cost_saving_sum = "{} 万元".format(np.floor(cs_sum))
-                else:
-                    cost_saving_sum = "{} 元".format(int(np.floor(cost_saving_sum)))
+                co2 = df["co2_emission_reduction"].interpolate(
+                    method="index"
+                ).interpolate(method="nearest").bfill().ffill().sum()
 
+                cost = df["cost_saving"].sum()
+
+                co2_sum = co2 / 1000
+
+                if co2_sum >= 100:
+                    co2 = f"{int(np.floor(co2_sum))} Mg"
+                else:
+                    co2 = f"{int(np.floor(co2))} Kg"
+
+                cs_sum = cost / 10000
+                if cs_sum >= 10:
+                    cost = "{} 万元".format(int(np.floor(cs_sum)))
+                else:
+                    cost = "{} 元".format(int(np.floor(cost)))
                 data.update(
                     {
-                        "max_load": "{} KW".format(df["max_load"].max().round(2)),
-                        "min_load": "{} KW".format(df["min_load"].min().round(2)),
-                        "cost_saving_total": cost_saving_sum
+                        "cost": cost,
+                        "avg_load": f'{int(np.floor(df["avg_load"].mean()))} kW',
+                        "co2": co2
                     }
                 )
 
@@ -143,7 +154,6 @@ class KambaView(APIView):
                 data["min"] = min_num
                 data["sizes"] = height
                 data["time"] = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"]
-
             elif key == "solar_collector":
                 df = get_common_df(["solar_collector"], db, start, end, time_index, engine, False)
 
@@ -153,13 +163,11 @@ class KambaView(APIView):
                 df = get_common_df(["solar_radiation"], db, start, end, time_index, engine, False)
 
                 data.update(get_common_response(df, by))
-
             elif key == "solar_collector_efficiency":
                 df = get_common_df(["heat_collection_efficiency"], db, start, end, time_index, engine, False)
                 df["heat_collection_efficiency"] = df["heat_collection_efficiency"] * 100
                 df["heat_collection_efficiency"] = df["heat_collection_efficiency"].apply(np.floor)
                 data.update(get_common_response(df, by))
-
             elif key == "solar_matrix_water_temperature":
                 params = ["time_data", "solar_matrix_supply_water_temp", "solar_matrix_return_water_temp"]
                 df = get_common_df(params, db, start, end, time_index, engine, False)
@@ -228,8 +236,6 @@ class KambaView(APIView):
             elif key == "heating_analysis":
                 params = ["high_temperature_plate_exchange_heat", "wshp_heat"]
                 df = get_common_df(params, db, start, end, time_index, engine)
-                print(df)
-
                 # TODO 临时处理
                 # df["wshp_heat"] = df["wshp_heat"].mask(df["wshp_heat"] >= 0, 0)
                 df.loc[df["wshp_heat"]<0, "wshp_heat"] = 0
@@ -289,6 +295,26 @@ class KambaView(APIView):
                 data["box_data"] = y
                 data["start"] = start.split(" ")[0]
                 data["end"] = end.split(" ")[0]
+            elif key == "cumulative_data":
+                item = request.data.get("item")
+                if request.data.get("initial"):
+                    start, end = START_DATE["kamba"], datetime.today().strftime("%Y/%m/%d 00:00:00")
+                if item.lower() == "co2":
+
+                    df = get_common_df(["co2_emission_reduction"], db, start, end, time_index, engine)
+                    df = abnormal_data_handling(df, ["co2_emission_reduction"])
+                    df["co2_emission_reduction"] = df["co2_emission_reduction"].interpolate(
+                        method="index"
+                    ).interpolate(method="nearest").bfill().ffill()
+                    df["co2_emission_reduction"] = df["co2_emission_reduction"].cumsum()
+                    data.update(get_common_response(df, by))
+                else:
+                    # 节省电费
+                    params = ["cost_saving"]
+                    df = get_common_df(params, db, start, end, time_index, engine)
+                    df = abnormal_data_handling(df, params)
+                    df["cost_saving"] = df["cost_saving"].cumsum()
+                    data.update(get_common_response(df, by))
 
         except Exception as e:
             # print("异常", e)

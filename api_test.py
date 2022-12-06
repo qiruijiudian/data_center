@@ -113,7 +113,7 @@ block = "cona"
 # *********************************************** 测试 /kamba 接口 START **************************************************
 block = "kamba"
 # 1. 面板数据
-# res = test_api(block, get_params_data(block, {"key": "panel_data"}), False)
+res = test_api(block, get_params_data(block, {"key": "panel_data"}))
 # print(res)
 # start, end = '2022/10/24 00:00:00' , '2022/10/30 23:59:59'
 
@@ -148,10 +148,11 @@ block = "kamba"
 # ]:
 #     print(item, test_api(block, get_params_data(block, {"key": item, "by": "d", "start": start, "end": end})))
 # res = test_api(block, get_params_data(block, {"key": "wshp_cop", "by": "d", "start": start, "end": end}))
-res = None
+# res = None
 # 2. 蓄热水池高低温热量
 # res = test_api(block, get_params_data(block, {"key": "heating_analysis", "by": "d"}))
-res = test_api(block, get_params_data(block, {"key": "box_data", "by": "d"}))
+# res = test_api(block, get_params_data(block, {"key": "cumulative_data", "by": "d", "item": "co2"}))
+# res = test_api(block, {"key": "cumulative_data", "by": "d", "item": "cost", "start": "2022/8/1 00:00:00", "end": "2022/11/20 23:59:59", "initial": True})
 
 # 3. 电锅炉可替换供热天数
 # res = test_api(block, get_params_data(block, {"key": "alternative_heating_days", "by": "d"}))

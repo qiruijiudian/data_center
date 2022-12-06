@@ -107,6 +107,7 @@ def is_day(df):
 
         return value.hour == value.minute == 0
 
+
 def abnormal_data_handling(df, params):
 
     if "heat_supply" in df.columns:
@@ -371,6 +372,13 @@ def check_custom_file(file):
             return False, x_name_error
     return True, "验证通过"
 
+
+def get_latest_data(conn, table):
+    res = conn.execute(f"select time_data from {table} order by time_data desc limit 1")
+    res = res.fetchone()
+    if res:
+        return res[0].strftime("%Y/%m/%d 23:59:59")
+    return datetime.today().strftime("%Y/%m/%d 23:59:59")
 
 def get_box_data(start, end):
     # 暂时使用 之后重置数据库更新内容

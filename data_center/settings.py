@@ -182,3 +182,9 @@ DATABASE = {
 
 UPLOAD = os.path.join(BASE_DIR, "file/upload")
 DOWNLOAD = os.path.join(BASE_DIR, "file/download")
+
+START_DATE = {
+    "cona": "2020/12/31 00:00:00",
+    "kamba": "2020/08/17 00:00:00",
+    "tianjin": "2022/03/15 00:00:00"
+}
