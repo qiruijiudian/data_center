@@ -4,17 +4,17 @@ from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, H
 from sqlalchemy import create_engine
 import pandas as pd
 import numpy as np
-from data_center.settings import DATABASE
+from data_center.settings import DATABASE, DB_NAME, TIME_DATA_INDEX
 from data_center.tools import gen_response, gen_time_range, get_common_response, get_last_time_range, \
     get_correspondence_with_temp_chart_response, get_common_sql, gen_time_range, get_last_time_by_delta, \
-    get_compare_with_item, get_common_df
+    get_compare_with_item, get_common_df, get_conn_by_db
 import platform
 
 
 class TianjinView(APIView):
     def post(self, request):
         plate_form = platform.system()
-        time_index = "time_data"
+        t_block = "tianjin"
         by = "h"
         data = {}
 
@@ -24,21 +24,12 @@ class TianjinView(APIView):
         end = request.data.get('end', None)
         block = request.data.get('block', None)
 
-        if not key:
-            return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
-
         if not all([key, start, end]):
             return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
 
-        db = "tianjin_commons_data"
+        db = DB_NAME[t_block]["common"]
 
-        engine = create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(
-                    DATABASE[plate_form]["data"]["user"],
-                    DATABASE[plate_form]["data"]["password"],
-                    DATABASE[plate_form]["data"]["host"],
-                    DATABASE[plate_form]["data"]["database"]
-                )
-        )
+        engine = get_conn_by_db(False)
         try:
 
             if key in ["panel_data", ""]:
@@ -59,7 +50,7 @@ class TianjinView(APIView):
                             "301", "302", "303", "401", "402-1", "402-2", "402-3", "402-4"]
 
                 params = [f"{block}_{param}_{num}" for param in params for num in nums]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 df = df.round(2)
                 data.update(
                     {
@@ -70,84 +61,84 @@ class TianjinView(APIView):
                 )
             elif key == "mau_fan_frequency":
                 params = ["mau_fan_frequency_201", "mau_fan_frequency_202", "mau_fan_frequency_203", "mau_fan_frequency_301", "mau_fan_frequency_401"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 # for column in params:
                 #     df[column] = df[column] * 100
-                data.update(get_common_response(df, time_index, by))
+                data.update(get_common_response(df, TIME_DATA_INDEX, by))
             elif key == "mau_water_valve_201":
                 params = ["time_data", "cold_water_valve_201", "hot_water_valve_201"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_water_valve_202":
                 params = ["cold_water_valve_202", "hot_water_valve_202"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_water_valve_203":
                 params = ["cold_water_valve_203", "hot_water_valve_203"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_water_valve_301":
                 params = ["cold_water_valve_301", "hot_water_valve_301"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_water_valve_401":
                 params = ["cold_water_valve_401", "hot_water_valve_401"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_temp_and_humidity_201":
                 params = ["air_supply_temperature_201", "air_supply_humidity_201"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_temp_and_humidity_202":
                 params = ["air_supply_temperature_202", "air_supply_humidity_202"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_temp_and_humidity_203":
                 params = ["air_supply_temperature_203", "air_supply_humidity_203"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_temp_and_humidity_301":
                 params = ["air_supply_temperature_301", "air_supply_humidity_301"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_temp_and_humidity_401":
                 params = ["air_supply_temperature_401", "air_supply_humidity_401"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_temperature":
 
                 params = ["air_supply_temperature_201", "air_supply_temperature_202", "air_supply_temperature_203",
                           "air_supply_temperature_301", "air_supply_temperature_401"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_temperature_specify":
                 temp_id = request.data.get("id")
                 if not id:
                     return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
                 params = ["air_supply_temperature_" + temp_id]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_humidity":
                 params = ["air_supply_humidity_201", "air_supply_humidity_202",
                           "air_supply_humidity_203",
                           "air_supply_humidity_301", "air_supply_humidity_401"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_humidity_specify":
                 hum_id = request.data.get("id")
                 if not id:
                     return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
                 params = ["air_supply_humidity_" + hum_id]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_air_supply_pressure":
                 params = ["air_supply_pressure_201", "air_supply_pressure_202", "air_supply_pressure_203", "air_supply_pressure_301", "air_supply_pressure_401"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "air_temperature_and_humidity":
 
                 params = ["air_temperature", "air_humidity"]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 data.update(get_common_response(df, by))
             elif key == "mau_data_with_temp":
                 params = ["air_temperature"]
@@ -159,7 +150,7 @@ class TianjinView(APIView):
                 elif item == "sah":
                     params.extend(["mau_air_supply_humidity_201", "mau_air_supply_humidity_202", "mau_air_supply_humidity_203", "mau_air_supply_humidity_301", "mau_air_supply_humidity_401"])
 
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 if item == "sat":
                     df["set_point"] = 8.2
                 elif item == "sap":
@@ -181,7 +172,7 @@ class TianjinView(APIView):
 
                 params.append(item)
 
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 df["set_point"] = set_point
                 data.update(get_compare_with_item(df, "air_temperature"))
             elif key == "combined_data":
@@ -192,7 +183,7 @@ class TianjinView(APIView):
                     "mau_fan_frequency_{}", "mau_cold_water_valve_{}", "mau_hot_water_valve_{}", "mau_air_supply_humidity_{}",
                     "mau_air_supply_temperature_{}"]
                           ]
-                df = get_common_df(params, db, start, end, time_index, engine)
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 # for column in df.columns:
                 #     if "fan_frequency" in column:
                 #         df[column] = np.floor(df[column] * 100)

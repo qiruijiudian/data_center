@@ -147,13 +147,46 @@ STATIC_URL = '/upload/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# DATABASE = {
+#     "Windows": {
+#         "data": {
+#             "host": "localhost",
+#             "user": "root",
+#             "password": "cdqr2008",
+#             "database": "data_center_statistical"
+#         },
+#         "user": {
+#             "host": "localhost",
+#             "user": "root",
+#             "password": "cdqr2008",
+#             "database": "data_center_user"
+#         }
+#
+#     },
+#     "Linux": {
+#         "data": {
+#             "host": "121.199.48.82",
+#             "user": "root",
+#             "password": "cdqr2008",
+#             "database": "data_center_statistical"
+#         },
+#         "user": {
+#             "host": "121.199.48.82",
+#             "user": "root",
+#             "password": "cdqr2008",
+#             "database": "data_center_user"
+#         }
+#
+#     }
+# }
+
 DATABASE = {
     "Windows": {
         "data": {
             "host": "localhost",
             "user": "root",
             "password": "cdqr2008",
-            "database": "data_center_statistical"
+            "database": "dc"
         },
         "user": {
             "host": "localhost",
@@ -168,7 +201,7 @@ DATABASE = {
             "host": "121.199.48.82",
             "user": "root",
             "password": "cdqr2008",
-            "database": "data_center_statistical"
+            "database": "dc"
         },
         "user": {
             "host": "121.199.48.82",
@@ -188,3 +221,22 @@ START_DATE = {
     "kamba": "2020/08/17 00:00:00",
     "tianjin": "2022/03/15 00:00:00"
 }
+
+DB_NAME = {
+    "kamba": {"common": {"h": "kamba_hours", "d": "kamba_days"}, "pool": {"h": "kamba_pool_hours", "d": "kamba_pool_days"}},
+    "cona": {"common": {"h": "cona_hours", "d": "cona_days"}},
+    "tianjin": {"common": "tianjin"}
+
+}
+
+TIME_DATA_INDEX = "time_data"
+POINT_NAME = "point_name"
+VALUE_NAME = "value"
+
+DB_ORIGIN = "dc_origin"
+DB_DC = "dc"
+
+# 数据库连接
+DB_USER = "root"
+DB_PASSWORD = "cdqr2008"
+DB_HOST = "localhost"

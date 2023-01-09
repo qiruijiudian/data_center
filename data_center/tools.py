@@ -11,7 +11,7 @@ import platform
 
 from sqlalchemy import create_engine
 
-from data_center.settings import DATABASE
+from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC
 import operator
 
 
@@ -90,6 +90,16 @@ def get_custom_response(df, by, chart_type, x_data):
     return res
 
 
+def get_conn_by_db(is_origin=True):
+    """返回数据库连接，如果is_origin为True则返回原始数据库，否则返回计算值数据库
+
+    :param is_origin: bool 是否访问原始数据库连接
+    :return: 数据库连接
+    """
+    db = DB_ORIGIN if is_origin else DB_DC
+    return create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(DB_USER, DB_PASSWORD, DB_HOST, db))
+
+
 def is_day(df):
     if len(df) > 1:
         start, end = 0, 1
@@ -132,6 +142,23 @@ def abnormal_data_handling(df, params):
     return df
 
 
+# def get_common_sql(params, db, start, end, time_key, deal=True):
+#     q_params = params
+#
+#     if deal:
+#         if "heat_supply" not in params:
+#             q_params = params + ["heat_supply"]
+#
+#     if len(q_params) == 1:
+#         common_sql = "select * from {} where pointname = '{}' and {} between '{}' and '{}'".format(
+#             db, q_params[0], time_key, start, end
+#         )
+#     else:
+#         common_sql = "select * from {} where pointname in {} and {} between '{}' and '{}'".format(
+#             db, tuple(q_params), time_key, start, end
+#         )
+#     return common_sql
+
 def get_common_sql(params, db, start, end, time_key, deal=True):
     q_params = params
 
@@ -140,11 +167,11 @@ def get_common_sql(params, db, start, end, time_key, deal=True):
             q_params = params + ["heat_supply"]
 
     if len(q_params) == 1:
-        common_sql = "select * from {} where pointname = '{}' and {} between '{}' and '{}'".format(
+        common_sql = "select * from {} where point_name = '{}' and {} between '{}' and '{}'".format(
             db, q_params[0], time_key, start, end
         )
     else:
-        common_sql = "select * from {} where pointname in {} and {} between '{}' and '{}'".format(
+        common_sql = "select * from {} where point_name in {} and {} between '{}' and '{}'".format(
             db, tuple(q_params), time_key, start, end
         )
     return common_sql
@@ -152,8 +179,15 @@ def get_common_sql(params, db, start, end, time_key, deal=True):
 
 def get_common_df(params, db, start, end, time_key, engine, deal=True):
     sql = get_common_sql(params, db, start, end, time_key, deal)
-    df = pd.read_sql(sql, con=engine)
-    return df.pivot(index=time_key, columns="pointname", values="value")
+    print(sql)
+    df = pd.read_sql(sql, con=engine).drop_duplicates()
+
+    return df.pivot(index=time_key, columns="point_name", values="value")
+
+# def get_common_df(params, db, start, end, time_key, engine, deal=True):
+#     sql = get_common_sql(params, db, start, end, time_key, deal)
+#     df = pd.read_sql(sql, con=engine)
+#     return df.pivot(index=time_key, columns="pointname", values="value")
 
 
 def get_correspondence_with_temp_chart_response(df, last_df, time_range, value_column, temp_column="temp"):
@@ -189,6 +223,7 @@ def gen_response(df, time_index, by):
     :param by: 时间跨度
     :return: 返回值字典
     """
+    print(df)
 
     res = {}
     df = df.round(2).fillna("")
@@ -213,7 +248,7 @@ def get_block_time_range(block):
     with pymysql.connect(host=db["host"], user=db["user"], password=db["password"], database=db["database"]) as conn:
         cur = conn.cursor()
         if block in ["cona", "kamba"]:
-            cur.execute("select time_data from {}_hours_data order by time_data desc limit 1".format(block))
+            cur.execute("select time_data from {}_hours order by time_data desc limit 1".format(block))
         else:
             cur.execute("select time_data from tianjin_commons_data order by time_data desc limit 1".format(block))
         res = cur.fetchone()
@@ -235,6 +270,36 @@ def get_block_time_range(block):
         "start": start, "end": end, "last_month_date": last_month_date, "start_limit":
             start_limit[block], "end_limit": latest_time.strftime("%Y/%m/%d %H:%M:%S")
     }
+
+# def get_block_time_range(block):
+#     start_limit = {"cona": "2020/12/31 00:00:00", "kamba": "2020/08/17 00:00:00", "tianjin": "2022/03/15 00:00:00"}
+#     db = DATABASE[platform.system()]["data"]
+#     res = None
+#     with pymysql.connect(host=db["host"], user=db["user"], password=db["password"], database=db["database"]) as conn:
+#         cur = conn.cursor()
+#         if block in ["cona", "kamba"]:
+#             cur.execute("select time_data from {}_hours_data order by time_data desc limit 1".format(block))
+#         else:
+#             cur.execute("select time_data from tianjin_commons_data order by time_data desc limit 1".format(block))
+#         res = cur.fetchone()
+#         cur.close()
+#
+#     if not res:
+#         return None
+#
+#     latest_time = res[0]
+#     _day = datetime.now() - timedelta(2)
+#     if latest_time.date() < _day.date():
+#         _day = latest_time
+#
+#     start_date = _day - timedelta(6)
+#     start, end = start_date.strftime('%Y/%m/%d') + ' 00:00:00', _day.strftime('%Y/%m/%d') + ' 23:59:59'
+#     last_month_date = (_day - timedelta(29)).strftime('%Y/%m/%d') + ' 00:00:00'
+#
+#     return {
+#         "start": start, "end": end, "last_month_date": last_month_date, "start_limit":
+#             start_limit[block], "end_limit": latest_time.strftime("%Y/%m/%d %H:%M:%S")
+#     }
 
 
 def get_last_time_range(start, end):

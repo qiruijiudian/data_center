@@ -68,7 +68,7 @@ def test_api(u_type, data, is_local=True):
 # *********************************************** 测试 /cona 接口 START **************************************************
 block = "cona"
 # 1. 面板数据
-# res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+res = test_api(block, get_params_data(block, {"key": "panel_data"}))
 
 # 2. 供水温度与气温关系
 # res = test_api(block, get_params_data(block, {"key": "water_supply_with_temp", "by": "d"}))
@@ -113,7 +113,7 @@ block = "cona"
 # *********************************************** 测试 /kamba 接口 START **************************************************
 block = "kamba"
 # 1. 面板数据
-res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+# res = test_api(block, get_params_data(block, {"key": "panel_data"}))
 # print(res)
 # start, end = '2022/10/24 00:00:00' , '2022/10/30 23:59:59'
 
