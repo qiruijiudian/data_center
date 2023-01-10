@@ -11,7 +11,7 @@ import platform
 
 from sqlalchemy import create_engine
 
-from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC
+from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC, TIME_DATA_INDEX, DB_NAME
 import operator
 
 
@@ -245,14 +245,23 @@ def get_block_time_range(block):
     start_limit = {"cona": "2020/12/31 00:00:00", "kamba": "2020/08/17 00:00:00", "tianjin": "2022/03/15 00:00:00"}
     db = DATABASE[platform.system()]["data"]
     res = None
-    with pymysql.connect(host=db["host"], user=db["user"], password=db["password"], database=db["database"]) as conn:
-        cur = conn.cursor()
+    engine = get_conn_by_db(False)
+    conn = engine.connect()
+
+    try:
         if block in ["cona", "kamba"]:
-            cur.execute("select time_data from {}_hours order by time_data desc limit 1".format(block))
+            res = conn.execute(
+                f"select {TIME_DATA_INDEX} from {DB_NAME[block]['common']['h']} order by {TIME_DATA_INDEX} desc limit 1"
+            )
         else:
-            cur.execute("select time_data from tianjin_commons_data order by time_data desc limit 1".format(block))
-        res = cur.fetchone()
-        cur.close()
+            res = conn.execute(
+                f"select {TIME_DATA_INDEX} from {DB_NAME[block]['common']} order by {TIME_DATA_INDEX} desc limit 1"
+            )
+        res = res.fetchone()
+
+    finally:
+        conn.close()
+        engine.dispose()
 
     if not res:
         return None
@@ -270,36 +279,6 @@ def get_block_time_range(block):
         "start": start, "end": end, "last_month_date": last_month_date, "start_limit":
             start_limit[block], "end_limit": latest_time.strftime("%Y/%m/%d %H:%M:%S")
     }
-
-# def get_block_time_range(block):
-#     start_limit = {"cona": "2020/12/31 00:00:00", "kamba": "2020/08/17 00:00:00", "tianjin": "2022/03/15 00:00:00"}
-#     db = DATABASE[platform.system()]["data"]
-#     res = None
-#     with pymysql.connect(host=db["host"], user=db["user"], password=db["password"], database=db["database"]) as conn:
-#         cur = conn.cursor()
-#         if block in ["cona", "kamba"]:
-#             cur.execute("select time_data from {}_hours_data order by time_data desc limit 1".format(block))
-#         else:
-#             cur.execute("select time_data from tianjin_commons_data order by time_data desc limit 1".format(block))
-#         res = cur.fetchone()
-#         cur.close()
-#
-#     if not res:
-#         return None
-#
-#     latest_time = res[0]
-#     _day = datetime.now() - timedelta(2)
-#     if latest_time.date() < _day.date():
-#         _day = latest_time
-#
-#     start_date = _day - timedelta(6)
-#     start, end = start_date.strftime('%Y/%m/%d') + ' 00:00:00', _day.strftime('%Y/%m/%d') + ' 23:59:59'
-#     last_month_date = (_day - timedelta(29)).strftime('%Y/%m/%d') + ' 00:00:00'
-#
-#     return {
-#         "start": start, "end": end, "last_month_date": last_month_date, "start_limit":
-#             start_limit[block], "end_limit": latest_time.strftime("%Y/%m/%d %H:%M:%S")
-#     }
 
 
 def get_last_time_range(start, end):

@@ -147,38 +147,6 @@ STATIC_URL = '/upload/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# DATABASE = {
-#     "Windows": {
-#         "data": {
-#             "host": "localhost",
-#             "user": "root",
-#             "password": "cdqr2008",
-#             "database": "data_center_statistical"
-#         },
-#         "user": {
-#             "host": "localhost",
-#             "user": "root",
-#             "password": "cdqr2008",
-#             "database": "data_center_user"
-#         }
-#
-#     },
-#     "Linux": {
-#         "data": {
-#             "host": "121.199.48.82",
-#             "user": "root",
-#             "password": "cdqr2008",
-#             "database": "data_center_statistical"
-#         },
-#         "user": {
-#             "host": "121.199.48.82",
-#             "user": "root",
-#             "password": "cdqr2008",
-#             "database": "data_center_user"
-#         }
-#
-#     }
-# }
 
 DATABASE = {
     "Windows": {

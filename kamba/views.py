@@ -45,7 +45,7 @@ class KambaView(APIView):
                 ).interpolate(method="nearest").bfill().ffill().sum()
                 cost = df["cost_saving"].sum()
                 co2_sum = co2 / 1000
-                co2 = f"{int(np.floor(co2_sum))} Mg" if co2_sum >= 100 else f"{int(np.floor(co2))} Kg"
+                co2 = f"{int(np.floor(co2_sum))} 吨" if co2_sum >= 100 else f"{int(np.floor(co2))} Kg"
                 cs_sum = cost / 10000
                 cost = "{} 万元".format(int(np.floor(cs_sum))) if cs_sum >= 10 else "{} 元".format(int(np.floor(cost)))
                 data.update({"cost": cost, "avg_load": f'{int(np.floor(df["avg_load"].mean()))} kW', "co2": co2})
@@ -200,6 +200,25 @@ class KambaView(APIView):
                 data["end"] = df.index[-1].strftime("%Y/%m/%d")
                 data["last_year_start"] = last_df.index[0].strftime("%Y/%m/%d")
                 data["last_year_end"] = last_df.index[-1].strftime("%Y/%m/%d")
+            elif key == "heat_supply_with_temperature_compare":
+
+                params = ["heat_supply", "temp"]
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine, False)
+                last_time = get_last_time_by_delta(start, "-", 1, "y")
+                last_df = get_common_df(params, db, last_time["start"], last_time["end"], TIME_DATA_INDEX, engine,
+                                        False)
+                df, last_df = df.round(2).fillna(""), last_df.round(2).fillna("")
+                df[df["heat_supply"] < 0] = 0
+                last_df[last_df["heat_supply"] < 0] = 0
+                temp, last_temp = df["temp"].values, last_df["temp"].values
+                for column in ["heat_supply"]:
+                    data[column] = list(zip(temp, df[column].values))
+                    data["last_" + column] = list(zip(last_temp, last_df[column].values))
+                data["start"] = df.index[0].strftime("%Y/%m/%d")
+                data["end"] = df.index[-1].strftime("%Y/%m/%d")
+                data["last_year_start"] = last_df.index[0].strftime("%Y/%m/%d")
+                data["last_year_end"] = last_df.index[-1].strftime("%Y/%m/%d")
+
             elif key == "solar_collector_analysis":
                 if by == "h":
                     return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
@@ -283,14 +302,16 @@ class KambaView(APIView):
                     df["co2_emission_reduction"] = df["co2_emission_reduction"].interpolate(
                         method="index"
                     ).interpolate(method="nearest").bfill().ffill()
-                    df["co2_emission_reduction"] = df["co2_emission_reduction"].cumsum()
+                    df["co2_emission_reduction"] = (df["co2_emission_reduction"].cumsum() / 1000).round()
                     data.update(get_common_response(df, by))
                 else:
                     # 节省电费
                     params = ["cost_saving"]
                     df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                     df = abnormal_data_handling(df, params)
-                    df["cost_saving"] = df["cost_saving"].cumsum()
+                    print(df)
+                    df["cost_saving"] = (df["cost_saving"].cumsum() / 10000).round()
+                    print(df)
                     data.update(get_common_response(df, by))
 
         except Exception as e:
