@@ -33,7 +33,8 @@ def get_common_response(df, by, is_timing=True):
     :return:
     """
     res = {}
-    df = df.round(2).fillna("")
+    # df = df.round(2).fillna("")
+    df = df.round(2).fillna(0)
 
     res["start"] = df.index[0].strftime("%Y/%m/%d")
     res["end"] = df.index[-1].strftime("%Y/%m/%d")

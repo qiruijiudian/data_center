@@ -207,9 +207,10 @@ class KambaView(APIView):
                 last_time = get_last_time_by_delta(start, "-", 1, "y")
                 last_df = get_common_df(params, db, last_time["start"], last_time["end"], TIME_DATA_INDEX, engine,
                                         False)
-                df, last_df = df.round(2).fillna(""), last_df.round(2).fillna("")
                 df[df["heat_supply"] < 0] = 0
                 last_df[last_df["heat_supply"] < 0] = 0
+                df, last_df = df.round(2).fillna(0), last_df.round(2).fillna(0)
+
                 temp, last_temp = df["temp"].values, last_df["temp"].values
                 for column in ["heat_supply"]:
                     data[column] = list(zip(temp, df[column].values))
@@ -256,6 +257,8 @@ class KambaView(APIView):
                 params = ["cost_saving", "power_consumption"]
                 df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 df = abnormal_data_handling(df, params)
+                # TODO 临时处理耗电量
+                df["power_consumption"][df["power_consumption"] < 0] = 0
                 data.update(get_common_response(df, by))
             elif key == "end_water_temperature":
                 params = ["end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff"]
