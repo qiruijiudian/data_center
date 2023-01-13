@@ -215,7 +215,7 @@ block = "kamba"
 
 # 20. 节省供暖费用
 # res = test_api(block, get_params_data(block, {"key": "cost_saving", "by": "d"}))
-res = test_api(block, get_params_data(block, {"key": "heat_supply_with_temperature_compare"}), False)
+res = test_api(block, get_params_data(block, {"key": "heat_supply_with_temperature_compare"}), True)
 
 
 # 21. 末端供回水温度

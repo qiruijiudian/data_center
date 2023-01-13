@@ -180,8 +180,12 @@ def get_common_sql(params, db, start, end, time_key, deal=True):
 
 def get_common_df(params, db, start, end, time_key, engine, deal=True):
     sql = get_common_sql(params, db, start, end, time_key, deal)
-    print(sql)
-    df = pd.read_sql(sql, con=engine).drop_duplicates()
+    df = pd.read_sql(sql, con=engine)
+    df = df.set_index(TIME_DATA_INDEX)
+
+    df = df.drop_duplicates()
+    df = df.reset_index()
+
 
     return df.pivot(index=time_key, columns="point_name", values="value")
 
