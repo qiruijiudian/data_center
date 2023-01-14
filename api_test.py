@@ -113,7 +113,7 @@ block = "cona"
 # *********************************************** 测试 /kamba 接口 START **************************************************
 block = "kamba"
 # 1. 面板数据
-# res = test_api(block, get_params_data(block, {"key": "panel_data"}))
+res = test_api(block, get_params_data(block, {"key": "panel_data"}))
 # print(res)
 # start, end = '2022/10/24 00:00:00' , '2022/10/30 23:59:59'
 
@@ -215,7 +215,7 @@ block = "kamba"
 
 # 20. 节省供暖费用
 # res = test_api(block, get_params_data(block, {"key": "cost_saving", "by": "d"}))
-res = test_api(block, get_params_data(block, {"key": "heat_supply_with_temperature_compare"}), True)
+# res = test_api(block, get_params_data(block, {"key": "heat_supply_with_temperature_compare"}), True)
 
 
 # 21. 末端供回水温度

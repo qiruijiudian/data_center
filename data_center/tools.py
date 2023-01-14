@@ -11,7 +11,8 @@ import platform
 
 from sqlalchemy import create_engine
 
-from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC, TIME_DATA_INDEX, DB_NAME
+from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC, TIME_DATA_INDEX, DB_NAME, \
+    POINT_NAME, VALUE_NAME
 import operator
 
 
@@ -181,13 +182,9 @@ def get_common_sql(params, db, start, end, time_key, deal=True):
 def get_common_df(params, db, start, end, time_key, engine, deal=True):
     sql = get_common_sql(params, db, start, end, time_key, deal)
     df = pd.read_sql(sql, con=engine)
-    df = df.set_index(TIME_DATA_INDEX)
-
-    df = df.drop_duplicates()
-    df = df.reset_index()
-
-
-    return df.pivot(index=time_key, columns="point_name", values="value")
+    df = df.drop_duplicates(subset=[TIME_DATA_INDEX, POINT_NAME])
+    # df = df.reset_index()
+    return df.pivot(index=TIME_DATA_INDEX, columns=POINT_NAME, values=VALUE_NAME)
 
 # def get_common_df(params, db, start, end, time_key, engine, deal=True):
 #     sql = get_common_sql(params, db, start, end, time_key, deal)
