@@ -225,7 +225,6 @@ def gen_response(df, time_index, by):
     :param by: 时间跨度
     :return: 返回值字典
     """
-    print(df)
 
     res = {}
     df = df.round(2).fillna("")

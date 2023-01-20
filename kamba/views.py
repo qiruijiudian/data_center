@@ -299,9 +299,9 @@ class KambaView(APIView):
                 if request.data.get("initial"):
                     start, end = START_DATE["kamba"], datetime.today().strftime("%Y/%m/%d 00:00:00")
                 if item.lower() == "co2":
-
                     df = get_common_df(["co2_emission_reduction"], db, start, end, TIME_DATA_INDEX, engine)
                     df = abnormal_data_handling(df, ["co2_emission_reduction"])
+                    df[df["co2_emission_reduction"] < 0] = np.nan
                     df["co2_emission_reduction"] = df["co2_emission_reduction"].interpolate(
                         method="index"
                     ).interpolate(method="nearest").bfill().ffill()
@@ -312,9 +312,12 @@ class KambaView(APIView):
                     params = ["cost_saving"]
                     df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                     df = abnormal_data_handling(df, params)
-                    print(df)
+                    df[df["cost_saving"] < 0] = np.nan
+                    df["cost_saving"] = df["cost_saving"].interpolate(
+                        method="index"
+                    ).interpolate(method="nearest").bfill().ffill()
+
                     df["cost_saving"] = (df["cost_saving"].cumsum() / 10000).round()
-                    print(df)
                     data.update(get_common_response(df, by))
 
         except Exception as e:
