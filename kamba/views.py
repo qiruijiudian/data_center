@@ -1,18 +1,12 @@
-import json
 from datetime import datetime, timedelta
-
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_404_NOT_FOUND
-from sqlalchemy import create_engine
-import pandas as pd
-import math
 import numpy as np
-from data_center.settings import DATABASE, START_DATE, DB_NAME, TIME_DATA_INDEX
+from data_center.settings import START_DATE, DB_NAME, TIME_DATA_INDEX
 from data_center.tools import get_common_response, get_last_time_range, get_correspondence_with_temp_chart_response, \
-    get_common_sql, get_last_time_by_delta, get_common_df, abnormal_data_handling, get_box_data, get_latest_data, \
-    get_conn_by_db
-import platform
+    get_last_time_by_delta, get_common_df, abnormal_data_handling, get_box_data, get_latest_data, \
+    get_conn_by_db, convert_str_to_datetime
 
 
 class KambaView(APIView):
@@ -25,6 +19,7 @@ class KambaView(APIView):
         start = request.data.get('start', None)
         end = request.data.get('end', None)
         by = request.data.get('by', None)
+        print(start, end, by, key)
 
         if not all([key, start, end]):
             return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
@@ -44,7 +39,7 @@ class KambaView(APIView):
                     method="index"
                 ).interpolate(method="nearest").bfill().ffill().sum()
                 cost = df["cost_saving"].sum()
-                co2_sum = co2 / 1000
+                co2_sum = co2 * 1.964 / 1000
                 co2 = f"{int(np.floor(co2_sum))} 吨" if co2_sum >= 100 else f"{int(np.floor(co2))} Kg"
                 cs_sum = cost / 10000
                 cost = "{} 万元".format(int(np.floor(cs_sum))) if cs_sum >= 10 else "{} 元".format(int(np.floor(cost)))
@@ -73,9 +68,11 @@ class KambaView(APIView):
                 data.update(get_common_response(df, by))
                 data["status"] = "数据异常" if (("" in df["wshp_cop"].values) or (None in df["wshp_cop"].values)) else "正常"
             elif key == "pool_temperature_heatmap":
+                t = convert_str_to_datetime(end) - timedelta(days=1)
                 db = DB_NAME[block]["pool"]["h"]
-                day = end.split(" ")[0]
+                day = t.strftime("%Y/%m/%d")
                 start = "{} 00:00:00".format(day)
+                end = "{} 23:59:59".format(day)
                 data["date"] = day
 
                 params = ['Pit_LT01_0m00cm', 'Pit_LT02_0m20cm', 'Pit_LT03_0m40cm', 'Pit_LT04_0m60cm', 'Pit_LT05_0m80cm',
@@ -91,7 +88,8 @@ class KambaView(APIView):
                           '5.73', '6.06', '6.39', '6.72', '7.05', '7.38', '7.71', '8.04', '8.37', '8.7', '9.03', '9.36']
 
                 df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine, False)
-                df = df.round(2).fillna("")
+                # df = df.round(2).fillna("")
+                df = df.round(2).dropna(how="any")
                 res = {"0-4": {},  "4-8": {},  "8-12": {},  "12-16": {}, "16-20": {}, "20-24": {}}
                 max_num, min_num, values = -np.inf, np.inf, []
                 for column_index, column in enumerate(params[1:]):
@@ -135,6 +133,8 @@ class KambaView(APIView):
                 data.update(get_common_response(df, by))
             elif key == "solar_radiation":
                 df = get_common_df(["solar_radiation"], db, start, end, TIME_DATA_INDEX, engine, False)
+
+                start, end = "2022/01/01 00:00:00", "2022/01/31 23:59:59"
                 data.update(get_common_response(df, by))
             elif key == "solar_collector_efficiency":
                 df = get_common_df(["heat_collection_efficiency"], db, start, end, TIME_DATA_INDEX, engine, False)
@@ -299,24 +299,19 @@ class KambaView(APIView):
                 if request.data.get("initial"):
                     start, end = START_DATE["kamba"], datetime.today().strftime("%Y/%m/%d 00:00:00")
                 if item.lower() == "co2":
+
                     df = get_common_df(["co2_emission_reduction"], db, start, end, TIME_DATA_INDEX, engine)
                     df = abnormal_data_handling(df, ["co2_emission_reduction"])
-                    df[df["co2_emission_reduction"] < 0] = np.nan
                     df["co2_emission_reduction"] = df["co2_emission_reduction"].interpolate(
                         method="index"
                     ).interpolate(method="nearest").bfill().ffill()
-                    df["co2_emission_reduction"] = (df["co2_emission_reduction"].cumsum() / 1000).round()
+                    df["co2_emission_reduction"] = (df["co2_emission_reduction"].cumsum() * 1.964 / 1000).round()
                     data.update(get_common_response(df, by))
                 else:
                     # 节省电费
                     params = ["cost_saving"]
                     df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                     df = abnormal_data_handling(df, params)
-                    df[df["cost_saving"] < 0] = np.nan
-                    df["cost_saving"] = df["cost_saving"].interpolate(
-                        method="index"
-                    ).interpolate(method="nearest").bfill().ffill()
-
                     df["cost_saving"] = (df["cost_saving"].cumsum() / 10000).round()
                     data.update(get_common_response(df, by))
 

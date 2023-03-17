@@ -9,6 +9,8 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+import platform
+
 from corsheaders.defaults import default_methods
 from corsheaders.defaults import default_headers
 
@@ -48,6 +50,7 @@ INSTALLED_APPS = [
     'common',
     'tianjin',
     'customized_chart',
+    'report'
 ]
 
 MIDDLEWARE = [
@@ -161,6 +164,12 @@ DATABASE = {
             "user": "root",
             "password": "cdqr2008",
             "database": "data_center_user"
+        },
+        "report": {
+            "host": "localhost",
+            "user": "root",
+            "password": "cdqr2008",
+            "database": "report"
         }
 
     },
@@ -176,13 +185,58 @@ DATABASE = {
             "user": "root",
             "password": "cdqr2008",
             "database": "data_center_user"
+        },
+        "report": {
+            "host": "localhost",
+            "user": "root",
+            "password": "cdqr2008",
+            "database": "report"
         }
 
     }
 }
 
+DB_CONF = {
+    "local": {
+        "host": "localhost",
+        "user": "root",
+        "password": "cdqr2008",
+        "database": "report"
+    },
+    "cloud": {
+        "host": "121.199.48.82",
+        "user": "root",
+        "password": "cdqr2008",
+        "database": "report"
+    }
+}
+
+
 UPLOAD = os.path.join(BASE_DIR, "file/upload")
 DOWNLOAD = os.path.join(BASE_DIR, "file/download")
+
+COLUMN_MAPPING = {
+    'available_solar': '太阳能辐射量', 'co2_emission_reduction': 'CO2减排量', 'cop': 'COP', 'cost_saving': '节省电费',
+    'heat_collection_efficiency': '太阳能集热效率', 'heat_supply': '供热量',
+    'high_temperature_plate_exchange_heat': '高温板换制热量', 'pool_heat_input': '水池输入热量',
+    'pool_heat_loss': '水池损失热量', 'pool_heat_output': '水池输出热量', 'power_consumption': '耗电量',
+    'solar_collector': '太阳能集热量', 'sum_heat_of_storage': '水池存储热量', 'tower_heat_dissipation': '冷却塔散热量',
+    'wshp_heat': '水源热泵制热量'
+}
+
+TIME_DATA_INDEX = "time_data"
+POINT_NAME = "point_name"
+VALUE_NAME = "value"
+TPL_PATH = "file/report/templates/kamba_tpl.docx"
+REPORT_PATH = "file/report/downloads"
+CHART_PATH = "file/report/charts"
+
+TABLE_REPORT = "kamba"
+
+if platform.system() == "Linux":
+    TPL_PATH = os.path.join("/home/data_center", TPL_PATH)
+    REPORT_PATH = os.path.join("/home/data_center", REPORT_PATH)
+    CHART_PATH = os.path.join("/home/data_center", CHART_PATH)
 
 START_DATE = {
     "cona": "2020/12/31 00:00:00",

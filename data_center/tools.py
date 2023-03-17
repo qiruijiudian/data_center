@@ -11,8 +11,7 @@ import platform
 
 from sqlalchemy import create_engine
 
-from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC, TIME_DATA_INDEX, DB_NAME, \
-    POINT_NAME, VALUE_NAME
+from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC, TIME_DATA_INDEX, DB_NAME
 import operator
 
 
@@ -34,7 +33,6 @@ def get_common_response(df, by, is_timing=True):
     :return:
     """
     res = {}
-    # df = df.round(2).fillna("")
     df = df.round(2).fillna(0)
 
     res["start"] = df.index[0].strftime("%Y/%m/%d")
@@ -181,10 +179,9 @@ def get_common_sql(params, db, start, end, time_key, deal=True):
 
 def get_common_df(params, db, start, end, time_key, engine, deal=True):
     sql = get_common_sql(params, db, start, end, time_key, deal)
-    df = pd.read_sql(sql, con=engine)
-    df = df.drop_duplicates(subset=[TIME_DATA_INDEX, POINT_NAME])
-    # df = df.reset_index()
-    return df.pivot(index=TIME_DATA_INDEX, columns=POINT_NAME, values=VALUE_NAME)
+    df = pd.read_sql(sql, con=engine).drop_duplicates()
+
+    return df.pivot(index=time_key, columns="point_name", values="value")
 
 # def get_common_df(params, db, start, end, time_key, engine, deal=True):
 #     sql = get_common_sql(params, db, start, end, time_key, deal)
@@ -242,6 +239,14 @@ def gen_response(df, time_index, by):
     return res
 
 
+def convert_datetime_to_str(t: datetime, f="/"):
+    return t.strftime(f"%Y{f}%m{f}%d %H:%M:%S")
+
+
+def convert_str_to_datetime(t: str, f="/"):
+    return datetime.strptime(t, f"%Y{f}%m{f}%d %H:%M:%S")
+
+
 def get_block_time_range(block):
     start_limit = {"cona": "2020/12/31 00:00:00", "kamba": "2020/08/17 00:00:00", "tianjin": "2022/03/15 00:00:00"}
     db = DATABASE[platform.system()]["data"]
@@ -268,9 +273,10 @@ def get_block_time_range(block):
         return None
 
     latest_time = res[0]
-    _day = datetime.now() - timedelta(2)
-    if latest_time.date() < _day.date():
-        _day = latest_time
+    _day = res[0]
+    # _day = datetime.now() - timedelta(2)
+    # if latest_time.date() < _day.date():
+    #     _day = latest_time
 
     start_date = _day - timedelta(6)
     start, end = start_date.strftime('%Y/%m/%d') + ' 00:00:00', _day.strftime('%Y/%m/%d') + ' 23:59:59'
@@ -469,3 +475,7 @@ def get_box_data(start, end):
     finally:
 
         engine.dispose()
+
+
+if __name__ == '__main__':
+    print(get_block_time_range("kamba"))

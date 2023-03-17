@@ -14,12 +14,6 @@ API_HOST = {"local": "http://localhost:8000", "cloud": "http://cdqrmi.com:8000"}
 
 API_TYPE = {"common": "/common/", "cona": "/cona/", "kamba": "/kamba/", "tianjin": "/tianjin/", "custom": "/custom/"}
 
-def get_params_data_by_date(base_data, start, end):
-
-    base_data["start"] = start
-    base_data["end"] = end
-
-    return base_data
 
 def get_params_data(block, base_data, random_date=False):
     if base_data["key"] not in ["config_file", "custom_interface"]:
@@ -221,13 +215,11 @@ block = "kamba"
 
 # 20. 节省供暖费用
 # res = test_api(block, get_params_data(block, {"key": "cost_saving", "by": "d"}))
-# res = test_api(block, get_params_data(block, {"key": "heat_supply_with_temperature_compare"}), True)
+res = test_api(block, get_params_data(block, {"key": "solar_radiation", "by": "h"}))
 
 
 # 21. 末端供回水温度
 # res = test_api(block, get_params_data(block, {"key": "end_water_temperature", "by": "d"}))
-# res = test_api(block, get_params_data_by_date({"key": "emission_reduction"}, "2021/11/10 00:00:00", "2021/11/13 23:59:59"))
-res = test_api(block, get_params_data_by_date({"key": "cumulative_data", "item": "co2"}, "2021/11/10 00:00:00", "2021/11/13 23:59:59"))
 
 # ************************* ******************** 测试 /kamba 接口 END **************************************************
 # **********************************************************************************************************************
