@@ -150,7 +150,7 @@ STATIC_URL = '/upload/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+# 数据库配置
 DATABASE = {
     "Windows": {
         "data": {
