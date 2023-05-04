@@ -1,12 +1,16 @@
+from datetime import datetime, timedelta
+import platform
+from hashlib import sha256
+import pymysql
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_404_NOT_FOUND, HTTP_403_FORBIDDEN
-import pymysql
 from data_center.settings import DATABASE
-from datetime import datetime, timedelta
-from data_center.tools import gen_response, gen_time_range, get_block_time_range
-import platform
-from hashlib import sha256
+# --unused import gen_response & gen_time_range
+# from data_center.tools import gen_response, gen_time_range, get_block_time_range
+from data_center.tools import get_block_time_range
+
+
 
 
 class CommonView(APIView):
@@ -69,7 +73,7 @@ class CommonView(APIView):
                     allow_level = [3]
 
                     if block == "cona":
-                        allow_level.append(0),
+                        allow_level.append(0)
                     elif block == "kamba":
                         allow_level.append(1)
                     elif block == "tianjin":
