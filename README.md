@@ -10,6 +10,9 @@
 - 运行项目需要安装项目依赖以及`Mysql`数据环境。
 
 ~~~
+在windows平台下，需要将其中的pandas和numpy改为以下配置:
+pandas~=1.4.2
+numpy~=1.23.4
 pip install -r requirements.txt 
 python manage.py runserver 
 访问 http://127.0.0.1:8000 下对应路由进行测试
