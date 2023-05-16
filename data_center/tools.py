@@ -10,7 +10,7 @@ import pymysql
 import platform
 
 from sqlalchemy import create_engine
-from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC, TIME_DATA_INDEX, DB_NAME
+from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC, TIME_DATA_INDEX, DB_NAME, TESTOPTION
 import operator
 
 
@@ -95,8 +95,8 @@ def get_conn_by_db(is_origin=True, db = ''):
     :param is_origin: bool 是否访问原始数据库连接
     :return: 数据库连接
     """
-    if platform.system() == 'Windows':
-        db = DATABASE['Windows']['data']['database']
+    if TESTOPTION is True:
+        db = DB_ORIGIN if is_origin else DATABASE['Windows']['data']['database']
     else:
         db = DB_ORIGIN if is_origin else DB_DC
     return create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(DB_USER, DB_PASSWORD, DB_HOST, db))
