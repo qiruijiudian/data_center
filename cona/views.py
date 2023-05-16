@@ -67,8 +67,11 @@ class ConaView(APIView):
                 df = get_common_df(["com_cop"], db, start, end, TIME_DATA_INDEX, engine)
                 df["Target Minimum"] = 6
                 df["Low Threshold"] = 4
-                data.update(get_common_response(df, by))
-                data["status"] = "数据异常" if ("" in df["com_cop"].values or None in df["com_cop"].values) else "正常"
+                if not df.empty:
+                    data.update(get_common_response(df, by))
+                    data["status"] = "数据异常" if ("" in df["com_cop"].values or None in df["com_cop"].values) else "正常"
+                else:
+                    data["status"] = "数据异常"
             elif key == "cost_saving":
                 df = get_common_df(["cost_saving"], db, start, end, TIME_DATA_INDEX, engine)
 

@@ -10,7 +10,6 @@ import pymysql
 import platform
 
 from sqlalchemy import create_engine
-
 from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC, TIME_DATA_INDEX, DB_NAME
 import operator
 
@@ -90,13 +89,16 @@ def get_custom_response(df, by, chart_type, x_data):
     return res
 
 
-def get_conn_by_db(is_origin=True):
+def get_conn_by_db(is_origin=True, db = ''):
     """返回数据库连接，如果is_origin为True则返回原始数据库，否则返回计算值数据库
 
     :param is_origin: bool 是否访问原始数据库连接
     :return: 数据库连接
     """
-    db = DB_ORIGIN if is_origin else DB_DC
+    if platform.system() == 'Windows':
+        db = DATABASE['Windows']['data']['database']
+    else:
+        db = DB_ORIGIN if is_origin else DB_DC
     return create_engine('mysql+pymysql://{}:{}@{}/{}?charset=utf8'.format(DB_USER, DB_PASSWORD, DB_HOST, db))
 
 
@@ -161,17 +163,20 @@ def abnormal_data_handling(df, params):
 
 def get_common_sql(params, db, start, end, time_key, deal=True):
     q_params = params
-
     if deal:
         if "heat_supply" not in params:
             q_params = params + ["heat_supply"]
 
     if len(q_params) == 1:
-        common_sql = "select * from {} where point_name = '{}' and {} between '{}' and '{}'".format(
+        common_sql = "select * from {} where pointname = '{}' and {} between '{}' and '{}'".format(
             db, q_params[0], time_key, start, end
         )
     else:
-        common_sql = "select * from {} where point_name in {} and {} between '{}' and '{}'".format(
+        common_sql = "select * from {} where pointname in {} and {} between '{}' and '{}'".format(
+            db, tuple(q_params), time_key, start, end
+        )
+    if q_params[0] in ('wshp_cop', 'com_cop') :
+        common_sql = "select time_data, pointname, ifnull(`value`,0) as `value` from {} where pointname in {} and {} between '{}' and '{}'".format(
             db, tuple(q_params), time_key, start, end
         )
     return common_sql
@@ -179,9 +184,13 @@ def get_common_sql(params, db, start, end, time_key, deal=True):
 
 def get_common_df(params, db, start, end, time_key, engine, deal=True):
     sql = get_common_sql(params, db, start, end, time_key, deal)
-    df = pd.read_sql(sql, con=engine).drop_duplicates()
+    try:
+        df = pd.read_sql(sql, con=engine).drop_duplicates()
+    except Exception as e:
+        print(f'error sql:------------{get_common_sql}')
+        print(f'error : {e}')
 
-    return df.pivot(index=time_key, columns="point_name", values="value")
+    return df.pivot_table(index=time_key, columns="pointname", values="value", aggfunc = 'mean')
 
 # def get_common_df(params, db, start, end, time_key, engine, deal=True):
 #     sql = get_common_sql(params, db, start, end, time_key, deal)

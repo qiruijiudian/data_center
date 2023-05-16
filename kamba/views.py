@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
+import platform
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_404_NOT_FOUND
 import numpy as np
-from data_center.settings import START_DATE, DB_NAME, TIME_DATA_INDEX
+from data_center.settings import START_DATE, DB_NAME, TIME_DATA_INDEX, DATABASE, TIMESTAMP, TESTOPTION
 from data_center.tools import get_common_response, get_last_time_range, get_correspondence_with_temp_chart_response, \
     get_last_time_by_delta, get_common_df, abnormal_data_handling, get_box_data, get_latest_data, \
     get_conn_by_db, convert_str_to_datetime
@@ -23,9 +24,14 @@ class KambaView(APIView):
 
         if not all([key, start, end]):
             return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
+        
         db = DB_NAME[block]["common"]["d" if not by else by.strip()]
 
-        engine = get_conn_by_db(False)
+        # 区分测试与现网环境
+        if TESTOPTION is True:
+            engine = get_conn_by_db(False, DATABASE['Windows']['data']['database'])
+        else:
+            engine = get_conn_by_db(False)
 
         try:
 
@@ -58,7 +64,8 @@ class KambaView(APIView):
                 df = abnormal_data_handling(df, ["cop"])
                 df["Target Minimum"] = 6
                 df["Low Threshold"] = 4
-                data.update(get_common_response(df, by))
+                if not df.empty:
+                    data.update(get_common_response(df, by))
                 data["status"] = "数据异常" if ("" in df["cop"].values or None in df["cop"].values) else "正常"
             elif key == "wshp_cop":
                 df = get_common_df(["wshp_cop"], db, start, end, TIME_DATA_INDEX, engine)
@@ -87,7 +94,7 @@ class KambaView(APIView):
                           '2.8', '3', '3.2', '3.4', '3.6', '3.8', '4', '4.2', '4.4', '4.6', '4.8', '5', '5.2', '5.4',
                           '5.73', '6.06', '6.39', '6.72', '7.05', '7.38', '7.71', '8.04', '8.37', '8.7', '9.03', '9.36']
 
-                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine, False)
+                df = get_common_df(params, db, start, end, TIMESTAMP, engine, False)
                 # df = df.round(2).fillna("")
                 df = df.round(2).dropna(how="any")
                 res = {"0-4": {},  "4-8": {},  "8-12": {},  "12-16": {}, "16-20": {}, "20-24": {}}

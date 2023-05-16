@@ -44,7 +44,7 @@ python manage.py runserver
 | token登录校验 | token_check |
 | 实时时间获取  | real_time   |
 
-
+实时时间获取的是数据库内最近一条数据的时间而不是指当前的北京时间，如果图表中时间未更新请检查settings配置的数据库是否是本地。
 
 #### 4.2 `ConaView、KambaView`
 
@@ -118,7 +118,10 @@ print(r.text)
 
 - 后端代码方面：测试版本的代码放在`github`的test分支下，如果第一次克隆代码使用`git clone -b test https://github.com/qiruijiudian/data_center.git`,如果此前克隆过代码可使用`git pull`更新最新代码`git pull origin test:test`
 - 前端代码和其他板块代码都只保留主分支，直接克隆或者拉取即可
-
+也可以使用以下命令挂载远端分支
+git fetch
+git checkout -b test origin/test
+git checkout -b main origin/main
 ~~~
 1. 拉取/克隆后端代码
 
@@ -132,17 +135,22 @@ git clone https://github.com/qiruijiudian/data_center_web.git
 
 **执行完代码准备阶段，此时的代码结构如下：**
 
-├─data_center
-└─data_center_web
-
+    ├─data_center
+    └─data_center_web
 
 
 #### 6.2 第二步：安装后端代码环境依赖库
 
 ~~~
 cd data_center
-
+在windows平台下，需要将requirements.txt其中的pandas和numpy改为以下配置:
+pandas~=1.4.2
+numpy~=1.23.4
 pip install -r requirements.txt
+
+再进入到/data_center的子目录中，查看settings.py, 根据环境修改database的配置。比如登录所用的账号信息可能本地数据库没有，
+可以直接修改user的database ip为云服务器ip。
+
 ~~~
 
 
@@ -156,17 +164,25 @@ python manage.py runserver
 ```
 
 
-
 #### 6.4 第四步：用服务器模式访问网页
 
 - 保证目前的路径在项目根路径下，即当前目录为
-  - ├─data_center
-    └─data_center_web
+
+      - ├─data_center
+        └─data_center_web
+
 - 分别用`cmd`在当前目录下依次执行以下指令：
 
 ```
 python -m http.server 8080
 start http://localhost:8080/data_center_web/kamba.html
 
+也可以直接浏览器访问http://localhost:8080/，然后选择相应的html页面，注意要使用浏览器的无痕模式。
+
 ```
 
+#### 7.现网数据来源为dc数据库以及dc_origin
+- 对应关系为
+
+        dc<--->data_center_statistcal
+        dc_origin<--->data_center_original

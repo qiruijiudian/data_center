@@ -17,6 +17,8 @@ from corsheaders.defaults import default_headers
 from pathlib import Path
 import os
 
+# 用来区分是否是测试环境
+TESTOPTION = True
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -157,10 +159,10 @@ DATABASE = {
             "host": "localhost",
             "user": "root",
             "password": "cdqr2008",
-            "database": "dc"
+            "database": "data_center_statistical" if TESTOPTION is True else "dc"
         },
         "user": {
-            "host": "localhost",
+            "host": "121.199.48.82",
             "user": "root",
             "password": "cdqr2008",
             "database": "data_center_user"
@@ -178,7 +180,7 @@ DATABASE = {
             "host": "121.199.48.82",
             "user": "root",
             "password": "cdqr2008",
-            "database": "dc"
+            "database": "data_center_statistical" if TESTOPTION is True else "dc"
         },
         "user": {
             "host": "121.199.48.82",
@@ -244,12 +246,21 @@ START_DATE = {
     "tianjin": "2022/03/15 00:00:00"
 }
 
-DB_NAME = {
-    "kamba": {"common": {"h": "kamba_hours", "d": "kamba_days"}, "pool": {"h": "kamba_pool_hours", "d": "kamba_pool_days"}},
+
+
+
+if TESTOPTION is True:
+    DB_NAME = {"kamba": {"common": {"h": "kamba_hours_data", "d": "kamba_days_data"}, "pool": {"h": "kamba_hours_pool_temperature", "d": "kamba_hours_pool_temperature"}},
+    "cona": {"common": {"h": "cona_hours_data", "d": "cona_days_data"}},
+    "tianjin": {"common": "tianjin_commons_data"}
+    }
+    TIMESTAMP = 'Timestamp'
+else:
+    DB_NAME = {"kamba": {"common": {"h": "kamba_hours", "d": "kamba_days"}, "pool": {"h": "kamba_pool_hours", "d": "kamba_pool_days"}},
     "cona": {"common": {"h": "cona_hours", "d": "cona_days"}},
     "tianjin": {"common": "tianjin"}
-
-}
+    }
+    TIMESTAMP = "time_data"
 
 TIME_DATA_INDEX = "time_data"
 POINT_NAME = "point_name"
