@@ -180,9 +180,18 @@ start http://localhost:8080/data_center_web/kamba.html
 也可以直接浏览器访问http://localhost:8080/，然后选择相应的html页面，注意要使用浏览器的无痕模式。
 
 ```
+#### 7.现网代码同步
 
-#### 7.现网数据来源为dc数据库以及dc_origin
-- 对应关系为
+- 本地提交代码后，ssh到远程服务器(root@121.199.48.82)上,密码为(CDQRcdqr2008)
+- 进入/home/data_center/目录,git pull最新代码
+- 刷新网页即可。
+- 如果遇到特殊情况可以回滚代码。
 
+      git reflog // 查看代码pull的历史记录
+      git reset --hard {commit id} //回滚版本
+#### 7.1 setting.py中TESTOPTION的选项
+- TESTOPTION决定数据来源数据库的选择，现网数据来源为dc数据库以及dc_origin对应关系为
+
+        TESTOPTION is False<---> True
         dc<--->data_center_statistcal
         dc_origin<--->data_center_original

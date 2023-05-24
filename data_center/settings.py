@@ -18,7 +18,7 @@ from pathlib import Path
 import os
 
 # 用来区分是否是测试环境
-TESTOPTION = True
+TESTOPTION = False
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -250,7 +250,7 @@ START_DATE = {
 
 
 if TESTOPTION is True:
-    DB_NAME = {"kamba": {"common": {"h": "kamba_hours_data", "d": "kamba_days_data"}, "pool": {"h": "kamba_hours_pool_temperature", "d": "kamba_hours_pool_temperature"}},
+    DB_NAME = {"kamba": {"common": {"h": "kamba_hours_data", "d": "kamba_days_data"}, "pool": {"h": "kamba_hours_pool_temperature", "d": "kamba_days_pool_temperature"}},
     "cona": {"common": {"h": "cona_hours_data", "d": "cona_days_data"}},
     "tianjin": {"common": "tianjin_commons_data"}
     }
@@ -272,4 +272,6 @@ DB_DC = "dc"
 # 数据库连接
 DB_USER = "root"
 DB_PASSWORD = "cdqr2008"
+# 连接的数据库
 DB_HOST = "localhost"
+# DB_HOST = "121.199.48.82"

@@ -166,31 +166,38 @@ def get_common_sql(params, db, start, end, time_key, deal=True):
     if deal:
         if "heat_supply" not in params:
             q_params = params + ["heat_supply"]
-
+    if TESTOPTION is True:
+        pointname = 'pointname'
+    else:
+        pointname = 'point_name'
     if len(q_params) == 1:
-        common_sql = "select * from {} where pointname = '{}' and {} between '{}' and '{}'".format(
-            db, q_params[0], time_key, start, end
+        common_sql = "select * from {} where `{}` = '{}' and {} between '{}' and '{}'".format(
+            db, pointname, q_params[0], time_key, start, end
         )
     else:
-        common_sql = "select * from {} where pointname in {} and {} between '{}' and '{}'".format(
-            db, tuple(q_params), time_key, start, end
+        common_sql = "select * from {} where `{}` in {} and {} between '{}' and '{}'".format(
+            db, pointname, tuple(q_params), time_key, start, end
         )
     if q_params[0] in ('wshp_cop', 'com_cop') :
-        common_sql = "select time_data, pointname, ifnull(`value`,0) as `value` from {} where pointname in {} and {} between '{}' and '{}'".format(
-            db, tuple(q_params), time_key, start, end
+        common_sql = "select time_data, `{}`, ifnull(`value`,0) as `value` from {} where `{}` in {} and {} between '{}' and '{}'".format(
+            pointname, db, pointname, tuple(q_params), time_key, start, end
         )
     return common_sql
 
 
 def get_common_df(params, db, start, end, time_key, engine, deal=True):
     sql = get_common_sql(params, db, start, end, time_key, deal)
+    if TESTOPTION is True:
+        pointname = 'pointname'
+    else:
+        pointname = 'point_name'
     try:
         df = pd.read_sql(sql, con=engine).drop_duplicates()
     except Exception as e:
         print(f'error sql:------------{get_common_sql}')
         print(f'error : {e}')
 
-    return df.pivot_table(index=time_key, columns="pointname", values="value", aggfunc = 'mean')
+    return df.pivot_table(index=time_key, columns=pointname, values="value", aggfunc = 'mean')
 
 # def get_common_df(params, db, start, end, time_key, engine, deal=True):
 #     sql = get_common_sql(params, db, start, end, time_key, deal)
