@@ -254,7 +254,6 @@ class KambaView(APIView):
                 df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine)
                 df["heat_supply_rate"] = np.floor(df["heat_supply_rate"] * 100)
                 df = abnormal_data_handling(df, params)
-                df = df.where(df < 0, 0)
                 data.update(get_common_response(df, by))
             elif key == "high_temperature_plate_exchange_heat_rate":
                 params = ["high_temperature_plate_exchange_heat_rate"]
