@@ -130,9 +130,10 @@ class KambaView(APIView):
                     temp.append({hour_item:[]})
                     index = len(temp) - 1
                     for height_item, value_item2 in value_item.items():
-                        heat_value = [hour_item, height_item, round(sum(value_item2)/len(value_item2), 2)]
+                        _value = round(sum(value_item2)/len(value_item2), 2)
+                        heat_value = [hour_item, height_item, _value]
                         if heat_value not in values:
-                            temp[index][hour_item].append({'value': heat_value})
+                            temp[index][hour_item].append({'height_item': height_item, 'value':_value})
                             values.append(heat_value)
                 data["values"] = values
                 data["max"] = max_num
