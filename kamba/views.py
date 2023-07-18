@@ -125,16 +125,21 @@ class KambaView(APIView):
                             max_num = value
                         if isinstance(value, float) and value < min_num:
                             min_num = value
+                temp = []
                 for hour_item, value_item in res.items():
+                    temp.append({hour_item:[]})
+                    index = len(temp) - 1
                     for height_item, value_item2 in value_item.items():
                         heat_value = [hour_item, height_item, round(sum(value_item2)/len(value_item2), 2)]
                         if heat_value not in values:
+                            temp[index][hour_item].append({'value': heat_value})
                             values.append(heat_value)
                 data["values"] = values
                 data["max"] = max_num
                 data["min"] = min_num
                 data["sizes"] = height
                 data["time"] = ["0-4", "4-8", "8-12", "12-16", "16-20", "20-24"]
+                data["true_value"] = temp
             elif key == "solar_collector":
                 df = get_common_df(["solar_collector"], db, start, end, TIME_DATA_INDEX, engine, False)
                 data.update(get_common_response(df, by))
