@@ -20,6 +20,9 @@ import os
 # 用来区分是否是测试环境
 TESTOPTION = False
 
+API_HOST = {"local": "http://localhost:8000", "cloud": "http://cdqrmi.com:8000"}
+API_TYPE = {"common": "/common/", "cona": "/cona/", "kamba": "/kamba/", "tianjin": "/tianjin/", "custom": "/custom/"}
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

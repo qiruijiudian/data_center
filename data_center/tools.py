@@ -194,7 +194,7 @@ def get_common_df(params, db, start, end, time_key, engine, deal=True):
     try:
         df = pd.read_sql(sql, con=engine).drop_duplicates()
     except Exception as e:
-        print(f'error sql:------------{get_common_sql}')
+        print(f'error sql:------------{sql}')
         print(f'error : {e}')
 
     return df.pivot_table(index=time_key, columns=pointname, values="value", aggfunc = 'mean')
