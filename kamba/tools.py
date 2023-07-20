@@ -11,8 +11,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class Kamba_tools():
     API_HOST = {"local": "http://localhost:8000", "cloud": "http://cdqrmi.com:8000"}
     API_TYPE = {"common": "/common/", "cona": "/cona/", "kamba": "/kamba/", "tianjin": "/tianjin/", "custom": "/custom/"}
-    # 定义间隔时间（24h）
-    interval = 24 * 1
+    # 定义间隔时间（1h）
+    interval = 1 * 3600
 
     # 创建调度程序对象
     scheduler = sched.scheduler(time.time, time.sleep)
