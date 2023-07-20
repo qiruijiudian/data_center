@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import json
+import os
 import platform
 import requests
 from rest_framework.response import Response
@@ -31,19 +32,31 @@ class KambaView(APIView):
         last_week_key = ['panel_data', 'pool_temperature_heatmap']
 
         if autotime:
-            time_range = json.loads(self.get_time("common", {"key": "real_time", "block": 'kamba'}, False))
-            if key and key in last_month_date_key:
-                start = time_range.get('last_month_date')
-                end = time_range.get('end')
-            elif key and key in last_week_key:
-                start = time_range.get('start')
-                end = time_range.get('end')
-            if by and by == 'd':
-                start = time_range.get('last_month_date')
-                end = time_range.get('end')
-            elif by and by == 'h':
-                start = time_range.get('start')
-                end = time_range.get('end')
+            try:
+                current_dir = os.path.dirname(__file__)
+                os.chdir(current_dir)
+                filename = "./time_range.json"
+                if os.path.exists(filename):
+                    with open(filename, "r", encoding='utf-8') as file:
+                        # 解析 JSON 数据
+                        time_range = json.load(file) 
+                else:
+                    time_range = json.loads(self.get_time("common", {"key": "real_time", "block": 'kamba'}, False))
+                if key and key in last_month_date_key:
+                    start = time_range.get('last_month_date')
+                    end = time_range.get('end')
+                elif key and key in last_week_key:
+                    start = time_range.get('start')
+                    end = time_range.get('end')
+                if by and by == 'd':
+                    start = time_range.get('last_month_date')
+                    end = time_range.get('end')
+                elif by and by == 'h':
+                    start = time_range.get('start')
+                    end = time_range.get('end')
+            except Exception as e:
+                print(f'error: {e}')
+                return Response({"msg": "get_time_range error"}, status=HTTP_404_NOT_FOUND)
         if not all([key, start, end]):
             return Response({"msg": "params error"}, status=HTTP_404_NOT_FOUND)
         
