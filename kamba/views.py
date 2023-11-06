@@ -362,6 +362,41 @@ class KambaView(APIView):
                     df = abnormal_data_handling(df, params)
                     df["cost_saving"] = (df["cost_saving"].cumsum() / 10000).round()
                     data.update(get_common_response(df, by))
+            elif key == "all_origin_data":
+                params = ["high_heat_of_storage", "low_heat_of_storage", "heat_supply_days", "solar_collector",
+                           "solar_radiation", "solar_matrix_supply_water_temp", "solar_matrix_return_water_temp",
+                         "end_supply_water_temp", "end_return_water_temp", "end_return_water_temp_diff", 
+                         "heat_storage_tank_replenishment", "heat_water_replenishment", "heat_water_replenishment_limit",
+                         "solar_side_replenishment", "solar_side_replenishment_limit", "solar_collector_efficiency", 
+                         "heat_collection_efficiency", "temp"]
+
+                df = get_common_df(params, db, start, end, TIME_DATA_INDEX, engine, False)
+                df["heat_collection_efficiency"] = df["heat_collection_efficiency"] * 100
+                df["heat_collection_efficiency"] = df["heat_collection_efficiency"].apply(np.floor)
+
+                params2 = ["cop", "max_load", "min_load", "avg_load", "high_temperature_plate_exchange_heat", "wshp_heat",
+                           "heat_supply", "wshp_power_consume", "heat_supply_rate", "high_temperature_plate_exchange_heat_rate",
+                           "cost_saving", "power_consumption", "co2_emission_reduction", "co2_equal_num", "heating_guarantee_rate"]
+                
+                df2 = get_common_df(params2, db, start, end, TIME_DATA_INDEX, engine, False)
+                df2.loc[df2["wshp_heat"] < 0, "wshp_heat"] = 0
+                df2["heat_supply_rate"] = np.floor(df2["heat_supply_rate"] * 100)
+                df2["power_consumption"][df2["power_consumption"] < 0] = 0
+                df2["power_consumption"] = df2["power_consumption"].cumsum()
+                df2["heating_guarantee_rate"] = np.floor(df2["heating_guarantee_rate"] * 100)
+                df2 = abnormal_data_handling(df2, params2)
+                df2["co2_emission_reduction"] = df2["co2_emission_reduction"].interpolate(
+                        method="index"
+                    ).interpolate(method="nearest").bfill().ffill()
+                df2["co2_emission_reduction"] = (df2["co2_emission_reduction"].cumsum() * 1.964 / 1000).round()
+                df2["cost_saving"] = (df2["cost_saving"].cumsum() / 10000).round()
+
+                import pandas
+                _df = pandas.merge(df, df2, on='time_data')
+                print(_df)
+
+                data.update(get_common_response(_df, by))
+
 
         except Exception as e:
             import traceback
