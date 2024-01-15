@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR, HTTP_404_NOT_FOUND
 import numpy as np
-from data_center.settings import START_DATE, DB_NAME, TIME_DATA_INDEX, DATABASE, TIMESTAMP, TESTOPTION, API_HOST, API_TYPE
+from data_center.settings import START_DATE, DB_NAME, TIME_DATA_INDEX, DATABASE, TIMESTAMP, TESTOPTION, API_HOST, API_TYPE, DB_ORIGIN
 from data_center.tools import get_common_response, get_last_time_range, get_correspondence_with_temp_chart_response, \
     get_last_time_by_delta, get_common_df, abnormal_data_handling, get_box_data, get_latest_data, \
     get_conn_by_db, convert_str_to_datetime
@@ -390,12 +390,13 @@ class KambaView(APIView):
                     ).interpolate(method="nearest").bfill().ffill()
                 df2["co2_emission_reduction"] = (df2["co2_emission_reduction"].cumsum() * 1.964 / 1000).round()
                 df2["cost_saving"] = (df2["cost_saving"].cumsum() / 10000).round()
-
+                
+                params3 = ["WD1", "WD2", "WD3", "WD4", "DD1"]
+                df3 = get_common_df(params3, 'kamba', start, end, TIME_DATA_INDEX, get_conn_by_db(False, DB_ORIGIN), False)
                 import pandas
-                _df = pandas.merge(df, df2, on='time_data')
-                print(_df)
-
-                data.update(get_common_response(_df, by))
+                _df = pandas.merge(df, df3, on='time_data')
+                __df = pandas.merge(_df, df2, on='time_data')
+                data.update(get_common_response(__df, by))
 
 
         except Exception as e:
