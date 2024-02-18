@@ -391,14 +391,17 @@ class KambaView(APIView):
                 df2["co2_emission_reduction"] = (df2["co2_emission_reduction"].cumsum() * 1.964 / 1000).round()
                 df2["cost_saving"] = (df2["cost_saving"].cumsum() / 10000).round()
                 
+                # params3 = ["WD1", "WD2", "WD3", "WD4", "DD1"]
+                # df3 = get_common_df(params3, 'kamba', start, end, TIME_DATA_INDEX, get_conn_by_db(False, DB_ORIGIN), False)
+                import pandas
+                # _df = pandas.merge(df, df3, on='time_data')
+                __df = pandas.merge(df, df2, on='time_data')
+                data.update(get_common_response(__df, by))
+            elif key == "kindergarten_data":
                 params3 = ["WD1", "WD2", "WD3", "WD4", "DD1"]
                 df3 = get_common_df(params3, 'kamba', start, end, TIME_DATA_INDEX, get_conn_by_db(False, DB_ORIGIN), False)
-                import pandas
-                _df = pandas.merge(df, df3, on='time_data')
-                __df = pandas.merge(_df, df2, on='time_data')
-                data.update(get_common_response(__df, by))
-
-
+                df3 = df3.resample("h").mean()
+                data.update(get_common_response(df3, by))
         except Exception as e:
             import traceback
             traceback.print_exc()
