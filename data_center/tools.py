@@ -261,8 +261,13 @@ def convert_datetime_to_str(t: datetime, f="/"):
 
 
 def convert_str_to_datetime(t: str, f="/"):
-    return datetime.strptime(t, f"%Y{f}%m{f}%d %H:%M:%S")
-
+    try:
+        time = datetime.strptime(t, f"%Y{f}%m{f}%d %H:%M:%S")
+    except ValueError:
+        temp_time = datetime.strptime(t, f"%Y-%m-%d %H:%M:%S")
+        temp_time = temp_time.strftime(f"%Y{f}%m{f}%d %H:%M:%S")
+        time = datetime.strptime(temp_time, f"%Y/%m/%d %H:%M:%S")
+    return time
 
 def get_block_time_range(block):
     start_limit = {"cona": "2020/12/31 00:00:00", "kamba": "2020/08/17 00:00:00", "tianjin": "2022/03/15 00:00:00"}
