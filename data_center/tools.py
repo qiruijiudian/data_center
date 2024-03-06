@@ -311,7 +311,10 @@ def get_block_time_range(block):
 
 
 def get_last_time_range(start, end):
-    time_start, time_end = map(lambda x: datetime.strptime(x, "%Y/%m/%d %H:%M:%S") if "/" in x else datetime.strptime(x, "%Y-%m-%d %H:%M:%S"), [start, end])
+    try:
+        time_start, time_end = map(lambda x: datetime.strptime(x, "%Y/%m/%d %H:%M:%S") if "/" in x else datetime.strptime(x, "%Y-%m-%d %H:%M:%S"), [start, end])
+    except ValueError:
+        time_start, time_end = map(lambda x: datetime.strptime(x, "%m/%d/%Y %H:%M:%S") if "/" in x else datetime.strptime(x, "%Y-%m-%d %H:%M:%S"),[start, end])
     last_end = time_start - timedelta(days=1)
     delta = time_end - time_start
     if delta < timedelta(days=8):
@@ -336,7 +339,10 @@ def get_last_time_by_delta(now, operate, delta, unit):
     if "-" in now:
         now = datetime.strptime(now, "%Y-%m-%d %H:%M:%S")
     else:
-        now = datetime.strptime(now, "%Y/%m/%d %H:%M:%S")
+        try:
+            now = datetime.strptime(now, "%Y/%m/%d %H:%M:%S")
+        except ValueError:
+            now = datetime.strptime(now, "%m/%d/%Y %H:%M:%S")
     end = now - timedelta(days=1)
     days = {"y": 365, "m": 30, "d": 1}[unit] * delta
     start = {"+": operator.add, "-": operator.sub}[operate](end, timedelta(days=days))
