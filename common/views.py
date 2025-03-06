@@ -21,8 +21,8 @@ class CommonView(APIView):
         key = request.data.get("key")
 
         header = {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+            # "Access-Control-Allow-Origin": "*",
+            # "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
             "Access-Control-Allow-Headers": "*"
         }
 
