@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import pymysql
 import platform
-
+from sqlalchemy import text
 from sqlalchemy import create_engine
 from data_center.settings import DATABASE, DB_USER, DB_PASSWORD, DB_HOST, DB_ORIGIN, DB_DC, TIME_DATA_INDEX, DB_NAME, TESTOPTION
 import operator
@@ -194,6 +194,8 @@ def get_common_df(params, db, start, end, time_key, engine, deal=True):
         pointname = 'point_name'
     try:
         df = pd.read_sql(sql, con=engine).drop_duplicates()
+        if 'Pit_HT11_9m03cm' in params:
+            df = df[df['value'] != 0] 
     except Exception as e:
         print(f'error sql:------------{sql}')
         print(f'error : {e}')
@@ -275,18 +277,16 @@ def get_block_time_range(block):
     res = None
     engine = get_conn_by_db(False)
     conn = engine.connect()
-
     try:
         if block in ["cona", "kamba"]:
-            res = conn.execute(
-                f"select {TIME_DATA_INDEX} from {DB_NAME[block]['common']['h']} order by {TIME_DATA_INDEX} desc limit 1"
+            res = conn.execute(text(
+                f"select {TIME_DATA_INDEX} from {DB_NAME[block]['common']['h']} order by {TIME_DATA_INDEX} desc limit 1")
             )
         else:
-            res = conn.execute(
-                f"select {TIME_DATA_INDEX} from {DB_NAME[block]['common']} order by {TIME_DATA_INDEX} desc limit 1"
+            res = conn.execute(text(
+                f"select {TIME_DATA_INDEX} from {DB_NAME[block]['common']} order by {TIME_DATA_INDEX} desc limit 1")
             )
         res = res.fetchone()
-
     finally:
         conn.close()
         engine.dispose()
@@ -453,11 +453,13 @@ def check_custom_file(file):
 
 
 def get_latest_data(conn, table):
-    res = conn.execute(f"select time_data from {table} order by time_data desc limit 1")
-    res = res.fetchone()
-    if res:
-        return res[0].strftime("%Y/%m/%d 23:59:59")
-    return datetime.today().strftime("%Y/%m/%d 23:59:59")
+    # 方法1: 使用引擎创建连接
+    with conn.connect() as connection:
+        res = connection.execute(text(f"select time_data from {table} order by time_data desc limit 1"))
+        res = res.fetchone()
+        if res:
+            return res[0].strftime("%Y/%m/%d 23:59:59")
+        return datetime.today().strftime("%Y/%m/%d 23:59:59")
 
 def get_box_data(start, end):
     # 暂时使用 之后重置数据库更新内容
